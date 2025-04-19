@@ -30,15 +30,16 @@ export function TimeEntryList({ onEdit }: TimeEntryListProps) {
     queryKey: ['time-entries'],
     queryFn: async () => {
       try {
+        // Fix: Use proper query structure to get employee and project data
         const { data, error } = await supabase
           .from('time_entries')
           .select(`
             *,
-            employee:employees(
+            employee:employee_id(
               first_name,
               last_name
             ),
-            project:projects(
+            project:project_id(
               project_name
             )
           `)
@@ -68,7 +69,12 @@ export function TimeEntryList({ onEdit }: TimeEntryListProps) {
   });
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('time_entries').delete().eq('id', id);
+    // Fix: Direct table access
+    const { error } = await supabase
+      .from('time_entries')
+      .delete()
+      .eq('id', id);
+      
     if (error) {
       toast({
         variant: "destructive",
@@ -95,22 +101,28 @@ export function TimeEntryList({ onEdit }: TimeEntryListProps) {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="font-semibold">Employee</TableHead>
-              <TableHead className="font-semibold">Project</TableHead>
-              <TableHead className="font-semibold">Date</TableHead>
-              <TableHead className="font-semibold">Hours</TableHead>
-              <TableHead className="font-semibold text-right">Actions</TableHead>
+              <TableHead className="font-semibold text-purple-600">Employee</TableHead>
+              <TableHead className="font-semibold text-blue-500">Project</TableHead>
+              <TableHead className="font-semibold text-orange-500">Date</TableHead>
+              <TableHead className="font-semibold text-green-500">Hours</TableHead>
+              <TableHead className="font-semibold text-right text-purple-600">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {timeEntries?.map((entry) => (
               <TableRow key={entry.id} className="hover:bg-muted/50 transition-colors">
-                <TableCell>
+                <TableCell className="text-pink-600">
                   {entry.employee?.first_name} {entry.employee?.last_name}
                 </TableCell>
-                <TableCell>{entry.project?.project_name}</TableCell>
-                <TableCell>{format(new Date(entry.date), 'PPP')}</TableCell>
-                <TableCell>{entry.hours}</TableCell>
+                <TableCell className="text-blue-500">
+                  {entry.project?.project_name}
+                </TableCell>
+                <TableCell className="text-orange-500">
+                  {entry.date ? format(new Date(entry.date), 'PPP') : 'N/A'}
+                </TableCell>
+                <TableCell className="text-green-500">
+                  {entry.hours}
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button 

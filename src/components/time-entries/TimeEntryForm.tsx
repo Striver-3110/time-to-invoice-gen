@@ -67,6 +67,7 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
+      // Fix: use direct table access instead of ".from('time_entries')"
       const { error } = timeEntry?.id
         ? await supabase
             .from('time_entries')
@@ -77,18 +78,21 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
               hours: data.hours,
             })
             .eq('id', timeEntry.id)
-        : await supabase.from('time_entries').insert([{
-            employee_id: data.employee_id,
-            project_id: data.project_id,
-            date: data.date,
-            hours: data.hours,
-          }]);
+        : await supabase
+            .from('time_entries')
+            .insert({
+              employee_id: data.employee_id,
+              project_id: data.project_id,
+              date: data.date,
+              hours: data.hours,
+            });
 
       if (error) throw error;
 
       toast({
         title: "Success",
         description: `Time entry ${timeEntry ? 'updated' : 'created'} successfully`,
+        variant: "default",
       });
       onSuccess();
     } catch (error) {
@@ -111,10 +115,10 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
           name="employee_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Employee</FormLabel>
+              <FormLabel className="text-pink-600">Employee</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-pink-50 border-pink-200">
                     <SelectValue placeholder="Select employee" />
                   </SelectTrigger>
                 </FormControl>
@@ -136,10 +140,10 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
           name="project_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Project</FormLabel>
+              <FormLabel className="text-blue-500">Project</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-blue-50 border-blue-200">
                     <SelectValue placeholder="Select project" />
                   </SelectTrigger>
                 </FormControl>
@@ -161,13 +165,13 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
           name="date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Date</FormLabel>
+              <FormLabel className="text-orange-500">Date</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
                       variant={"outline"}
-                      className={!field.value ? "text-muted-foreground" : ""}
+                      className={`${!field.value ? "text-muted-foreground" : ""} bg-orange-50 border-orange-200 text-orange-900`}
                     >
                       {field.value ? (
                         format(field.value, "PPP")
@@ -200,7 +204,7 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
           name="hours"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Hours</FormLabel>
+              <FormLabel className="text-green-500">Hours</FormLabel>
               <FormControl>
                 <Input 
                   type="number" 
@@ -208,6 +212,7 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
                   min="0.5" 
                   max="24" 
                   {...field} 
+                  className="bg-green-50 border-green-200"
                 />
               </FormControl>
               <FormMessage />
@@ -216,10 +221,14 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
         />
 
         <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} className="border-purple-300 hover:bg-purple-100">
             Cancel
           </Button>
-          <Button type="submit" disabled={loading}>
+          <Button 
+            type="submit" 
+            disabled={loading} 
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+          >
             {loading ? "Saving..." : timeEntry ? "Update" : "Create"}
           </Button>
         </div>

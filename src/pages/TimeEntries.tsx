@@ -38,7 +38,7 @@ const TimeEntries = () => {
       </div>
 
       {showForm ? (
-        <div className="border rounded-lg p-4 bg-white shadow-sm">
+        <div className="border rounded-lg p-4 bg-white shadow-sm border-purple-200">
           <h2 className="text-lg font-semibold mb-4 text-purple-600">
             {editingTimeEntry ? 'Edit Time Entry' : 'New Time Entry'}
           </h2>
