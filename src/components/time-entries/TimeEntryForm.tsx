@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
 import {
   Form,
   FormControl,
@@ -43,10 +44,8 @@ interface TimeEntryFormProps {
 
 export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormProps) {
   const { toast } = useToast();
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-
+  
   const form = useForm({
     defaultValues: {
       employee_id: timeEntry?.employee_id || "",
@@ -56,19 +55,41 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
     },
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const [employeesData, projectsData] = await Promise.all([
-        supabase.from('employees').select('id, first_name, last_name').eq('status', 'ACTIVE'),
-        supabase.from('projects').select('id, project_name').eq('status', 'ACTIVE')
-      ]);
+  const { data: employees } = useQuery({
+    queryKey: ['employees'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('id, first_name, last_name')
+        .eq('status', 'ACTIVE');
 
-      if (employeesData.data) setEmployees(employeesData.data);
-      if (projectsData.data) setProjects(projectsData.data);
-    };
+      if (error) throw error;
+      return data;
+    }
+  });
 
-    fetchData();
-  }, []);
+  const { data: availableProjects = [] } = useQuery({
+    queryKey: ['assigned-projects', form.watch('employee_id')],
+    queryFn: async () => {
+      if (!form.watch('employee_id')) return [];
+      
+      const { data, error } = await supabase
+        .from('assignments')
+        .select(`
+          project_id,
+          project:projects(
+            id,
+            project_name
+          )
+        `)
+        .eq('employee_id', form.watch('employee_id'))
+        .eq('status', 'ACTIVE');
+
+      if (error) throw error;
+      return data.map(assignment => assignment.project);
+    },
+    enabled: !!form.watch('employee_id')
+  });
 
   const onSubmit = async (data: any) => {
     setLoading(true);
@@ -128,7 +149,7 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {employees.map((employee) => (
+                  {employees?.map((employee) => (
                     <SelectItem key={employee.id} value={employee.id}>
                       {employee.first_name} {employee.last_name}
                     </SelectItem>
@@ -146,14 +167,14 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-blue-500">Project</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!form.watch('employee_id')}>
                 <FormControl>
                   <SelectTrigger className="bg-blue-50 border-blue-200">
-                    <SelectValue placeholder="Select project" />
+                    <SelectValue placeholder={form.watch('employee_id') ? "Select project" : "Select an employee first"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {projects.map((project) => (
+                  {availableProjects.map((project: any) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.project_name}
                     </SelectItem>
