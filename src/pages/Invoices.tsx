@@ -99,6 +99,7 @@ const Invoices = () => {
                 <TableHead>Client</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Due Date</TableHead>
+                <TableHead>Payment Date</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -111,6 +112,11 @@ const Invoices = () => {
                   <TableCell>{invoice.clients?.name}</TableCell>
                   <TableCell>{format(new Date(invoice.invoice_date), "MMM dd, yyyy")}</TableCell>
                   <TableCell>{format(new Date(invoice.due_date), "MMM dd, yyyy")}</TableCell>
+                  <TableCell>
+                    {invoice.payment_date 
+                      ? format(new Date(invoice.payment_date), "MMM dd, yyyy")
+                      : "--"}
+                  </TableCell>
                   <TableCell>{invoice.currency} {invoice.total_amount.toFixed(2)}</TableCell>
                   <TableCell>
                     <InvoiceStatusBadge status={invoice.status} />
@@ -125,7 +131,7 @@ const Invoices = () => {
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -148,7 +154,7 @@ const Invoices = () => {
               ))}
               {invoiceList.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     No invoices found. Generate an invoice from the client page.
                   </TableCell>
                 </TableRow>
