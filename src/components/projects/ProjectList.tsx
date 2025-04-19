@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -52,7 +53,7 @@ export function ProjectList({
         .select(`
           *,
           client:clients(name),
-          assignments!projects_id_fkey(
+          assignments:assignments(
             employee:employees(
               first_name,
               last_name,
@@ -130,9 +131,12 @@ export function ProjectList({
           </TableHeader>
           <TableBody>
             {projects?.map(project => {
-              const employees = project.assignments
-                ?.map(assignment => assignment.employee)
-                .filter(Boolean) || [];
+              // This ensures assignments is always an array, even if the relation wasn't found
+              const employees = project.assignments && Array.isArray(project.assignments) 
+                ? project.assignments
+                    .map(assignment => assignment.employee)
+                    .filter(Boolean)
+                : [];
 
               return (
                 <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
