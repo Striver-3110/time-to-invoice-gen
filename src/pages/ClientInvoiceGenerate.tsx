@@ -51,6 +51,15 @@ interface Employee {
   status: string;
 }
 
+interface Assignment {
+  id: string;
+  employee_id: string;
+  project_id: string;
+  employee?: {
+    designation: string;
+  };
+}
+
 interface TimeEntry {
   id: string;
   employee_id: string;
@@ -81,6 +90,7 @@ const ClientInvoiceGenerate = () => {
   const [dueDate, setDueDate] = useState<Date>(addDays(new Date(), 15));
   const [projectTimesheets, setProjectTimesheets] = useState<ProjectTimesheet[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [assignmentMap, setAssignmentMap] = useState<Record<string, Record<string, string>>>({});
   
   // Fetch client data
   const { data: client, isLoading: isLoadingClient } = useQuery({
@@ -127,6 +137,53 @@ const ClientInvoiceGenerate = () => {
     },
     enabled: !!clientId
   });
+  
+  // Fetch assignments for all projects when projects are loaded
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      if (!projects || projects.length === 0) return;
+      
+      const projectIds = projects.map(project => project.id);
+      
+      const { data, error } = await supabase
+        .from('assignments')
+        .select(`
+          id,
+          employee_id,
+          project_id,
+          employees(designation)
+        `)
+        .in('project_id', projectIds)
+        .eq('status', 'ACTIVE');
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not fetch assignments"
+        });
+        return;
+      }
+      
+      // Create a map of project_id -> designation -> assignment_id
+      const newAssignmentMap: Record<string, Record<string, string>> = {};
+      
+      data.forEach((assignment: any) => {
+        if (!newAssignmentMap[assignment.project_id]) {
+          newAssignmentMap[assignment.project_id] = {};
+        }
+        
+        const designation = assignment.employees?.designation;
+        if (designation) {
+          newAssignmentMap[assignment.project_id][designation] = assignment.id;
+        }
+      });
+      
+      setAssignmentMap(newAssignmentMap);
+    };
+    
+    fetchAssignments();
+  }, [projects, toast]);
   
   // Generate timesheets when dates change or projects load
   useEffect(() => {
@@ -261,22 +318,50 @@ const ClientInvoiceGenerate = () => {
       if (invoiceError) throw new Error(invoiceError.message);
       
       // Create invoice line items
-      const lineItemsPromises = projectTimesheets.flatMap(project => 
-        project.employees.map(employee => ({
-          invoice_id: invoice.invoice_id, // Use invoice_id instead of id
-          project_id: project.projectId,
-          // We need to add these missing fields
-          assignment_id: '00000000-0000-0000-0000-000000000000', // Using a placeholder UUID
-          employee_id: '00000000-0000-0000-0000-000000000000', // Using a placeholder UUID
-          service_description: `${employee.designation} services - ${project.projectName}`,
-          quantity: employee.hours,
-          total_amount: employee.amount
-        }))
-      );
+      const lineItems = [];
+      
+      for (const project of projectTimesheets) {
+        for (const employee of project.employees) {
+          // Get assignment ID from the map
+          const assignmentId = assignmentMap[project.projectId]?.[employee.designation];
+          
+          if (!assignmentId) {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: `No active assignment found for ${employee.designation} in project ${project.projectName}. Cannot create line item.`
+            });
+            continue;
+          }
+          
+          // Find any employee with this designation for this project
+          const { data: employeeData } = await supabase
+            .from('assignments')
+            .select('employee_id')
+            .eq('id', assignmentId)
+            .single();
+            
+          const employeeId = employeeData?.employee_id;
+          
+          lineItems.push({
+            invoice_id: invoice.invoice_id,
+            project_id: project.projectId,
+            assignment_id: assignmentId,
+            employee_id: employeeId,
+            service_description: `${employee.designation} services - ${project.projectName}`,
+            quantity: employee.hours,
+            total_amount: employee.amount
+          });
+        }
+      }
+      
+      if (lineItems.length === 0) {
+        throw new Error("Could not create any invoice line items due to missing assignment data");
+      }
       
       const { error: lineItemsError } = await supabase
         .from('invoice_line_items')
-        .insert(lineItemsPromises);
+        .insert(lineItems);
       
       if (lineItemsError) throw new Error(lineItemsError.message);
       
@@ -286,7 +371,7 @@ const ClientInvoiceGenerate = () => {
       });
       
       // Navigate to the created invoice
-      navigate(`/invoices/${invoice.invoice_id}`); // Use invoice_id instead of id
+      navigate(`/invoices/${invoice.invoice_id}`);
       
     } catch (error: any) {
       toast({
