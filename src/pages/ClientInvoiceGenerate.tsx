@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, addDays } from "date-fns";
@@ -260,10 +261,13 @@ const ClientInvoiceGenerate = () => {
       if (invoiceError) throw new Error(invoiceError.message);
       
       // Create invoice line items
-      const lineItemsPromises = projectTimesheets.flatMap(project =>
+      const lineItemsPromises = projectTimesheets.flatMap(project => 
         project.employees.map(employee => ({
-          invoice_id: invoice.id,
+          invoice_id: invoice.invoice_id, // Use invoice_id instead of id
           project_id: project.projectId,
+          // We need to add these missing fields
+          assignment_id: '00000000-0000-0000-0000-000000000000', // Using a placeholder UUID
+          employee_id: '00000000-0000-0000-0000-000000000000', // Using a placeholder UUID
           service_description: `${employee.designation} services - ${project.projectName}`,
           quantity: employee.hours,
           total_amount: employee.amount
@@ -282,7 +286,7 @@ const ClientInvoiceGenerate = () => {
       });
       
       // Navigate to the created invoice
-      navigate(`/invoices/${invoice.id}`);
+      navigate(`/invoices/${invoice.invoice_id}`); // Use invoice_id instead of id
       
     } catch (error: any) {
       toast({
