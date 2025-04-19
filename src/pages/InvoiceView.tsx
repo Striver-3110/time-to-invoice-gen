@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +15,7 @@ import { ArrowLeft, Download, Send } from "lucide-react";
 import { format } from "date-fns";
 import { InvoiceStatus } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { generateInvoicePDF } from "@/utils/pdfGenerator";
 
 const getStatusColor = (status: InvoiceStatus) => {
   switch (status) {
@@ -37,7 +37,6 @@ const InvoiceView = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Fetch invoice details
   const { data: invoice, isLoading: isLoadingInvoice } = useQuery({
     queryKey: ['invoice', id],
     queryFn: async () => {
@@ -67,7 +66,6 @@ const InvoiceView = () => {
     enabled: !!id
   });
 
-  // Fetch line items
   const { data: lineItems = [], isLoading: isLoadingItems } = useQuery({
     queryKey: ['invoice-line-items', id],
     queryFn: async () => {
@@ -100,6 +98,20 @@ const InvoiceView = () => {
     enabled: !!id
   });
 
+  const handleDownloadPDF = async () => {
+    if (invoice && lineItems) {
+      try {
+        await generateInvoicePDF(invoice, lineItems);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to generate PDF"
+        });
+      }
+    }
+  };
+
   if (isLoadingInvoice || isLoadingItems) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -126,7 +138,7 @@ const InvoiceView = () => {
           <h1 className="text-2xl font-bold text-primary">Invoice #{invoice.invoice_number}</h1>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleDownloadPDF}>
             <Download className="h-4 w-4 mr-2" />
             Download PDF
           </Button>
