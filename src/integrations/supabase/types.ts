@@ -14,6 +14,7 @@ export type Database = {
           created_at: string
           employee_id: string
           end_date: string
+          hourly_rate: number
           id: string
           project_id: string
           start_date: string
@@ -24,6 +25,7 @@ export type Database = {
           created_at?: string
           employee_id: string
           end_date: string
+          hourly_rate?: number
           id?: string
           project_id: string
           start_date: string
@@ -34,6 +36,7 @@ export type Database = {
           created_at?: string
           employee_id?: string
           end_date?: string
+          hourly_rate?: number
           id?: string
           project_id?: string
           start_date?: string

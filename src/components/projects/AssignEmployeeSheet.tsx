@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
@@ -26,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -48,6 +48,7 @@ interface FormData {
   employeeId: string;
   startDate: Date;
   endDate: Date;
+  hourlyRate: number;
 }
 
 export function AssignEmployeeSheet({ isOpen, onClose, projectId, onSuccess }: AssignEmployeeFormProps) {
@@ -59,6 +60,7 @@ export function AssignEmployeeSheet({ isOpen, onClose, projectId, onSuccess }: A
       employeeId: "",
       startDate: new Date(),
       endDate: new Date(),
+      hourlyRate: 75,
     },
   });
 
@@ -84,6 +86,7 @@ export function AssignEmployeeSheet({ isOpen, onClose, projectId, onSuccess }: A
         project_id: projectId,
         start_date: data.startDate.toISOString(),
         end_date: data.endDate.toISOString(),
+        hourly_rate: data.hourlyRate,
         status: "ACTIVE",
       });
 
@@ -116,7 +119,7 @@ export function AssignEmployeeSheet({ isOpen, onClose, projectId, onSuccess }: A
         <SheetHeader>
           <SheetTitle>Assign Employee</SheetTitle>
           <SheetDescription>
-            Assign an employee to this project by selecting them and setting their assignment period.
+            Assign an employee to this project by selecting them, setting their assignment period, and hourly rate.
           </SheetDescription>
         </SheetHeader>
 
@@ -235,6 +238,34 @@ export function AssignEmployeeSheet({ isOpen, onClose, projectId, onSuccess }: A
                       />
                     </PopoverContent>
                   </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="hourlyRate"
+              rules={{ 
+                required: "Hourly rate is required",
+                min: {
+                  value: 1,
+                  message: "Hourly rate must be greater than 0"
+                }
+              }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-indigo-700 font-medium">Hourly Rate ($)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      {...field}
+                      onChange={e => field.onChange(parseFloat(e.target.value))}
+                      className="border-indigo-200 focus:border-indigo-500"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
