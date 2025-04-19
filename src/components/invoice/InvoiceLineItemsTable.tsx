@@ -32,7 +32,7 @@ export const InvoiceLineItemsTable = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Invoice Line Items</CardTitle>
+        <CardTitle className="text-primary">Invoice Line Items</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
@@ -52,7 +52,7 @@ export const InvoiceLineItemsTable = ({
                 <TableCell>{item.projects?.project_name}</TableCell>
                 <TableCell>{item.employees?.designation}</TableCell>
                 <TableCell>{item.quantity} hours</TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-medium">
                   {currency} {item.total_amount.toFixed(2)}
                 </TableCell>
               </TableRow>
@@ -63,8 +63,8 @@ export const InvoiceLineItemsTable = ({
       <CardFooter className="flex justify-end border-t p-4">
         <div className="text-right">
           <div className="flex justify-between w-64">
-            <span className="font-semibold">Total Amount:</span>
-            <span className="font-bold">
+            <span className="font-semibold text-secondary-700">Total Amount:</span>
+            <span className="font-bold text-primary">
               {currency} {totalAmount.toFixed(2)}
             </span>
           </div>

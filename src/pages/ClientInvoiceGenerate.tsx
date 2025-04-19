@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { addDays } from "date-fns";
@@ -104,7 +103,7 @@ const ClientInvoiceGenerate = () => {
             invoice_id: invoice.invoice_id,
             project_id: project.projectId,
             assignment_id: assignmentMap[project.projectId]?.[employee.designation],
-            employee_id: employeeId, // Using actual employee ID instead of null
+            employee_id: employeeId,
             service_description: `${employee.designation} services - ${project.projectName}`,
             quantity: employee.hours,
             total_amount: employee.amount
@@ -122,7 +121,8 @@ const ClientInvoiceGenerate = () => {
       // Show success message
       toast({
         title: "Invoice Created",
-        description: `Invoice #${invoiceNumber} has been created.`
+        description: `Invoice #${invoiceNumber} has been created.`,
+        className: "bg-green-500 text-white border-green-600",
       });
       
       // Navigate to the invoice view

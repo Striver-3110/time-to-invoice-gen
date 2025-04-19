@@ -25,10 +25,10 @@ export const TimesheetTable = ({ projectTimesheets }: TimesheetTableProps) => {
             <TableBody>
               {project.employees.map((employee, idx) => (
                 <TableRow key={`${project.projectId}-${employee.designation}-${idx}`}>
-                  <TableCell>{employee.designation}</TableCell>
+                  <TableCell className="font-medium">{employee.designation}</TableCell>
                   <TableCell>{employee.hours}</TableCell>
-                  <TableCell>${employee.rate.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">${employee.amount.toFixed(2)}</TableCell>
+                  <TableCell className="text-secondary-600">${employee.rate.toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-semibold">${employee.amount.toFixed(2)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

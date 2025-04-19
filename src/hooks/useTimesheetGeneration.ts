@@ -22,6 +22,44 @@ export const useTimesheetGeneration = (
       const startDate = format(billingStart, 'yyyy-MM-dd');
       const endDate = format(billingEnd, 'yyyy-MM-dd');
       
+      // First get all assignments for these projects to access hourly rates
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('assignments')
+        .select(`
+          id,
+          project_id,
+          employee_id,
+          hourly_rate,
+          employees(id, designation)
+        `)
+        .in('project_id', projects.map(p => p.id))
+        .eq('status', 'ACTIVE');
+      
+      if (assignmentsError) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not fetch assignments data"
+        });
+        throw assignmentsError;
+      }
+      
+      // Create a map of employee designations and hourly rates per project
+      const ratesByProjectAndDesignation: Record<string, Record<string, number>> = {};
+      
+      assignments.forEach((assignment: any) => {
+        const projectId = assignment.project_id;
+        const designation = assignment.employees?.designation;
+        
+        if (!designation) return;
+        
+        if (!ratesByProjectAndDesignation[projectId]) {
+          ratesByProjectAndDesignation[projectId] = {};
+        }
+        
+        ratesByProjectAndDesignation[projectId][designation] = assignment.hourly_rate;
+      });
+      
       const timesheetsPromises = projects.map(async (project) => {
         const { data: timeEntries, error } = await supabase
           .from('time_entries')
@@ -63,7 +101,9 @@ export const useTimesheetGeneration = (
         timeEntries.forEach((entry: any) => {
           const designation = entry.employees.designation;
           const hours = entry.hours;
-          const hourlyRate = 75;
+          
+          // Get hourly rate from assignments, fallback to 75 if not found
+          const hourlyRate = ratesByProjectAndDesignation[project.id]?.[designation] || 75;
           
           if (!designationMap.has(designation)) {
             designationMap.set(designation, {
