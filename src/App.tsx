@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,7 +8,7 @@ import { AppLayout } from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import Projects from "./pages/Projects";
-import Employees from "./pages/Employees";
+import Employees from "./pages/Employees"; // Already imported in the existing App.tsx
 import TimeEntries from "./pages/TimeEntries";
 import Invoices from "./pages/Invoices";
 import InvoiceCreate from "./pages/InvoiceCreate";

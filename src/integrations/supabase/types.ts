@@ -42,6 +42,42 @@ export type Database = {
         }
         Relationships: []
       }
+      employees: {
+        Row: {
+          created_at: string
+          designation: string
+          email: string
+          first_name: string
+          hire_date: string
+          id: string
+          last_name: string
+          status: Database["public"]["Enums"]["employee_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          designation: string
+          email: string
+          first_name: string
+          hire_date: string
+          id?: string
+          last_name: string
+          status?: Database["public"]["Enums"]["employee_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          designation?: string
+          email?: string
+          first_name?: string
+          hire_date?: string
+          id?: string
+          last_name?: string
+          status?: Database["public"]["Enums"]["employee_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           client_id: string
@@ -91,6 +127,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      employee_status: "ACTIVE" | "INACTIVE"
       project_status: "ACTIVE" | "COMPLETED" | "ON_HOLD"
     }
     CompositeTypes: {
@@ -207,6 +244,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      employee_status: ["ACTIVE", "INACTIVE"],
       project_status: ["ACTIVE", "COMPLETED", "ON_HOLD"],
     },
   },
