@@ -7,7 +7,7 @@ export const generateInvoicePDF = async (invoice: any, lineItems: any[]) => {
   const content = `
     <div id="invoice-pdf" style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
       <div style="text-align: center; padding: 20px 0; display: flex; justify-content: space-between; align-items: center;">
-        <img src="https://i.ibb.co/N6RsxmgB/bottom.png" alt="Incubyte Logo" style="height: 60px; object-fit: contain;" />
+        <img src="https://i.ibb.co/Z6nDP1Fx/top.png" alt="Incubyte Logo" style="height: 60px; object-fit: contain;" />
         <div>
           <h1 style="color: #4f46e5; margin: 0;">INVOICE</h1>
           <p style="color: #666; margin: 5px 0;">#${invoice.invoice_number || invoice.invoiceNumber}</p>
