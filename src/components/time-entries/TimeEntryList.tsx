@@ -101,7 +101,7 @@ export function TimeEntryList({
                 <TableCell className="text-black-500">
                   {entry.project?.project_name}
                 </TableCell>
-                <TableCell className="text-orange-500">
+                <TableCell className="text-black-500">
                   {entry.date ? format(new Date(entry.date), 'PPP') : 'N/A'}
                 </TableCell>
                 <TableCell className="text-green-500">
