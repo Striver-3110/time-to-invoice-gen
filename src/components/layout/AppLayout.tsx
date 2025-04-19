@@ -1,4 +1,3 @@
-
 import { Outlet } from "react-router-dom";
 import { 
   SidebarProvider, Sidebar, SidebarContent, 
@@ -6,7 +5,6 @@ import {
   SidebarGroup, SidebarFooter 
 } from "@/components/ui/sidebar";
 import { 
-  BarChart3, 
   Users, 
   Clock, 
   FileText, 
@@ -57,12 +55,6 @@ export function AppLayout() {
       label: "Invoices", 
       path: "/invoices", 
       color: "text-red-500 group-hover:text-red-600"
-    },
-    { 
-      icon: BarChart3, 
-      label: "Reports", 
-      path: "/reports", 
-      color: "text-indigo-500 group-hover:text-indigo-600"
     }
   ];
   
