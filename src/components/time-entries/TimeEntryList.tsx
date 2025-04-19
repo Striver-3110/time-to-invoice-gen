@@ -98,7 +98,7 @@ export function TimeEntryList({
                 <TableCell className="text-black-600">
                   {entry.employee?.first_name} {entry.employee?.last_name}
                 </TableCell>
-                <TableCell className="text-blue-500">
+                <TableCell className="text-black-500">
                   {entry.project?.project_name}
                 </TableCell>
                 <TableCell className="text-orange-500">
