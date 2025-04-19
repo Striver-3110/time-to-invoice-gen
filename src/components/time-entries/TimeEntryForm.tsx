@@ -42,7 +42,8 @@ interface TimeEntryFormProps {
   onCancel: () => void;
 }
 
-interface AvailableProject {
+// Define a simple type for project data
+interface ProjectData {
   id: string;
   project_name: string;
 }
@@ -73,7 +74,8 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
     }
   });
 
-  const { data: availableProjects = [] } = useQuery({
+  // Fix: Use explicit typing to avoid excessively deep type instantiation
+  const { data: availableProjects = [] } = useQuery<ProjectData[]>({
     queryKey: ['assigned-projects', form.watch('employee_id')],
     queryFn: async () => {
       if (!form.watch('employee_id')) return [];
@@ -91,8 +93,11 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
 
       if (error) throw error;
       
-      // Extract the projects from the nested structure
-      return data.map(assignment => assignment.project) as AvailableProject[];
+      // Extract and transform the projects from the nested structure
+      return data.map(assignment => ({
+        id: assignment.project.id,
+        project_name: assignment.project.project_name
+      }));
     },
     enabled: !!form.watch('employee_id')
   });
