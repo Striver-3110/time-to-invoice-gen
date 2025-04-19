@@ -35,6 +35,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface AssignEmployeeFormProps {
   isOpen: boolean;
@@ -186,6 +187,7 @@ export function AssignEmployeeSheet({ isOpen, onClose, projectId, onSuccess }: A
                           date < new Date()
                         }
                         initialFocus
+                        className="p-3 pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -229,6 +231,7 @@ export function AssignEmployeeSheet({ isOpen, onClose, projectId, onSuccess }: A
                           date < form.getValues("startDate")
                         }
                         initialFocus
+                        className="p-3 pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
