@@ -104,7 +104,7 @@ export function TimeEntryList({
                 <TableCell className="text-black-500">
                   {entry.date ? format(new Date(entry.date), 'PPP') : 'N/A'}
                 </TableCell>
-                <TableCell className="text-green-500">
+                <TableCell className="text-black-500">
                   {entry.hours}
                 </TableCell>
                 <TableCell className="text-right">
