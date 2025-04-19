@@ -1,37 +1,16 @@
 
-import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Download, Send } from "lucide-react";
-import { format } from "date-fns";
 import { InvoiceStatus } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { generateInvoicePDF } from "@/utils/pdfGenerator";
-
-const getStatusColor = (status: InvoiceStatus) => {
-  switch (status) {
-    case InvoiceStatus.DRAFT:
-      return "bg-yellow-100 text-yellow-800";
-    case InvoiceStatus.SENT:
-      return "bg-blue-100 text-blue-800";
-    case InvoiceStatus.PAID:
-      return "bg-green-100 text-green-800";
-    case InvoiceStatus.OVERDUE:
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
+import { InvoiceDetailsCard } from "@/components/invoice/InvoiceDetailsCard";
+import { ClientCard } from "@/components/invoice/ClientCard";
+import { BillingPeriodCard } from "@/components/invoice/BillingPeriodCard";
+import { InvoiceLineItemsTable } from "@/components/invoice/InvoiceLineItemsTable";
 
 const InvoiceView = () => {
   const { id } = useParams<{ id: string }>();
@@ -135,10 +114,7 @@ const InvoiceView = () => {
         description: "Invoice has been sent to the client",
       });
 
-      // Refresh the invoice data to show updated status
       await refetchInvoice();
-      
-      // Also invalidate invoices list to update it elsewhere in the app
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
     } catch (error) {
       console.error("Error sending invoice:", error);
@@ -190,110 +166,22 @@ const InvoiceView = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Invoice Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="space-y-2">
-              <div className="flex justify-between">
-                <dt className="font-medium">Status:</dt>
-                <dd>
-                  <Badge className={getStatusColor(invoice.status as InvoiceStatus)} variant="outline">
-                    {invoice.status}
-                  </Badge>
-                </dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="font-medium">Invoice Date:</dt>
-                <dd>{format(new Date(invoice.invoice_date), "MMM dd, yyyy")}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="font-medium">Due Date:</dt>
-                <dd>{format(new Date(invoice.due_date), "MMM dd, yyyy")}</dd>
-              </div>
-              {invoice.payment_date && (
-                <div className="flex justify-between">
-                  <dt className="font-medium">Payment Date:</dt>
-                  <dd>{format(new Date(invoice.payment_date), "MMM dd, yyyy")}</dd>
-                </div>
-              )}
-            </dl>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Client</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-semibold">{invoice.clients?.name}</p>
-            <p className="text-sm text-muted-foreground">{invoice.clients?.contact_email}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Billing Period</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="space-y-2">
-              <div className="flex justify-between">
-                <dt className="font-medium">Start Date:</dt>
-                <dd>{format(new Date(invoice.billing_period_start), "MMM dd, yyyy")}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="font-medium">End Date:</dt>
-                <dd>{format(new Date(invoice.billing_period_end), "MMM dd, yyyy")}</dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
+        <InvoiceDetailsCard invoice={invoice} />
+        <ClientCard 
+          name={invoice.clients?.name || ''} 
+          email={invoice.clients?.contact_email || ''} 
+        />
+        <BillingPeriodCard 
+          startDate={invoice.billing_period_start} 
+          endDate={invoice.billing_period_end} 
+        />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Invoice Line Items</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Description</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Employee</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {lineItems.map((item) => (
-                <TableRow key={item.line_item_id}>
-                  <TableCell>{item.service_description}</TableCell>
-                  <TableCell>{item.projects?.project_name}</TableCell>
-                  <TableCell>
-                    {item.employees?.designation}
-                  </TableCell>
-                  <TableCell>{item.quantity} hours</TableCell>
-                  <TableCell className="text-right">
-                    {invoice.currency} {item.total_amount.toFixed(2)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-        <CardFooter className="flex justify-end border-t p-4">
-          <div className="text-right">
-            <div className="flex justify-between w-64">
-              <span className="font-semibold">Total Amount:</span>
-              <span className="font-bold">
-                {invoice.currency} {invoice.total_amount.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </CardFooter>
-      </Card>
+      <InvoiceLineItemsTable 
+        lineItems={lineItems} 
+        currency={invoice.currency} 
+        totalAmount={invoice.total_amount} 
+      />
     </div>
   );
 };
