@@ -4,22 +4,14 @@ import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
+  FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -29,6 +21,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
+import { useTimeEntryData } from "@/hooks/useTimeEntryData";
+import { EmployeeSelect } from "./EmployeeSelect";
+import { ProjectSelect } from "./ProjectSelect";
 
 interface TimeEntryFormProps {
   timeEntry?: {
@@ -40,12 +35,6 @@ interface TimeEntryFormProps {
   };
   onSuccess: () => void;
   onCancel: () => void;
-}
-
-// Define a simple type for project data
-interface ProjectData {
-  id: string;
-  project_name: string;
 }
 
 export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormProps) {
@@ -61,43 +50,7 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
     },
   });
 
-  const { data: employees } = useQuery({
-    queryKey: ['employees'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('id, first_name, last_name')
-        .eq('status', 'ACTIVE');
-
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  // Fix: The root cause of the deep type instantiation
-  // We need to completely avoid the nested type structure from Supabase
-  const { data: availableProjects = [] } = useQuery<ProjectData[]>({
-    queryKey: ['assigned-projects', form.watch('employee_id')],
-    queryFn: async () => {
-      if (!form.watch('employee_id')) return [];
-      
-      // Direct join query instead of nested selects to avoid deep type inference
-      const { data, error } = await supabase
-        .from('assignments')
-        .select('project_id, projects(id, project_name)')
-        .eq('employee_id', form.watch('employee_id'))
-        .eq('status', 'ACTIVE');
-
-      if (error) throw error;
-      
-      // Transform data to flat structure immediately to avoid deep type nesting
-      return data.map(item => ({
-        id: item.projects?.id || '',
-        project_name: item.projects?.project_name || ''
-      }));
-    },
-    enabled: !!form.watch('employee_id')
-  });
+  const { employees, availableProjects } = useTimeEntryData(form.watch('employee_id'));
 
   const onSubmit = async (data: any) => {
     setLoading(true);
@@ -144,55 +97,8 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="employee_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-pink-600">Employee</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-pink-50 border-pink-200">
-                    <SelectValue placeholder="Select employee" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {employees?.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.first_name} {employee.last_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="project_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-blue-500">Project</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!form.watch('employee_id')}>
-                <FormControl>
-                  <SelectTrigger className="bg-blue-50 border-blue-200">
-                    <SelectValue placeholder={form.watch('employee_id') ? "Select project" : "Select an employee first"} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {availableProjects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.project_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <EmployeeSelect form={form} employees={employees} />
+        <ProjectSelect form={form} projects={availableProjects} />
 
         <FormField
           control={form.control}
