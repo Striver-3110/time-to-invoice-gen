@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { 
@@ -10,12 +9,10 @@ import {
   BarChart3, 
   Users, 
   Clock, 
-  Clipboard, 
   FileText, 
   Home, 
   Settings,
   UserRoundPlus,
-  LayoutGrid,
   Briefcase
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -23,7 +20,6 @@ import { cn } from "@/lib/utils";
 
 export function AppLayout() {
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
   const menuItems = [
     { 
@@ -74,8 +70,9 @@ export function AppLayout() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <Sidebar>
-          <SidebarHeader className="px-6 pt-4">
+          <SidebarHeader className="flex items-center justify-between px-6 pt-4">
             <h2 className="text-2xl font-bold text-primary">InvoiceGen</h2>
+            <SidebarTrigger />
           </SidebarHeader>
           
           <SidebarContent>
@@ -89,6 +86,7 @@ export function AppLayout() {
                         "group w-full", 
                         location.pathname === item.path && "bg-primary/10"
                       )}
+                      tooltip={item.label}
                     >
                       <Link to={item.path} className="flex items-center gap-3">
                         <item.icon className={cn(
