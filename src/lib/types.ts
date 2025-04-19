@@ -1,4 +1,3 @@
-
 // Types based on the schema provided by the user
 export enum ClientStatus {
   ACTIVE = "ACTIVE",
@@ -84,6 +83,17 @@ export interface Assignment {
   project?: Project;
 }
 
+export interface InvoiceLineItem {
+  id: string;
+  invoiceId: string;
+  assignmentId: string;
+  employeeId: string;
+  projectId: string;
+  serviceDescription: string;
+  quantity: number;
+  totalAmount: number;
+}
+
 export interface Invoice {
   id: string;
   clientId: string;
@@ -96,20 +106,5 @@ export interface Invoice {
   paymentDate?: Date;
   billingPeriodStart: Date;
   billingPeriodEnd: Date;
-  client?: Client;
   lineItems?: InvoiceLineItem[];
-}
-
-export interface InvoiceLineItem {
-  id: string;
-  invoiceId: string;
-  employeeId: string;
-  projectId: string;
-  serviceDescription: string;
-  quantity: number;
-  rate: number;
-  totalAmount: number;
-  invoice?: Invoice;
-  employee?: Employee;
-  project?: Project;
 }

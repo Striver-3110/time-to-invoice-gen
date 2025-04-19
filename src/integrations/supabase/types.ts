@@ -126,6 +126,130 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_line_items: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          employee_id: string
+          invoice_id: string
+          line_item_id: string
+          project_id: string
+          quantity: number
+          service_description: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          employee_id: string
+          invoice_id: string
+          line_item_id?: string
+          project_id: string
+          quantity: number
+          service_description: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          employee_id?: string
+          invoice_id?: string
+          line_item_id?: string
+          project_id?: string
+          quantity?: number
+          service_description?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_line_items_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_line_items_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_line_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["invoice_id"]
+          },
+          {
+            foreignKeyName: "invoice_line_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          billing_period_end: string
+          billing_period_start: string
+          client_id: string
+          created_at: string
+          currency: string
+          due_date: string
+          invoice_date: string
+          invoice_id: string
+          invoice_number: string
+          payment_date: string | null
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          billing_period_end: string
+          billing_period_start: string
+          client_id: string
+          created_at?: string
+          currency?: string
+          due_date: string
+          invoice_date: string
+          invoice_id?: string
+          invoice_number: string
+          payment_date?: string | null
+          status: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          billing_period_end?: string
+          billing_period_start?: string
+          client_id?: string
+          created_at?: string
+          currency?: string
+          due_date?: string
+          invoice_date?: string
+          invoice_id?: string
+          invoice_number?: string
+          payment_date?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           client_id: string

@@ -1,4 +1,3 @@
-
 import { 
   Client, ClientStatus, Employee, EmployeeStatus, Project, ProjectStatus, 
   Assignment, AssignmentStatus, TimeEntry, Invoice, InvoiceStatus, InvoiceLineItem 
