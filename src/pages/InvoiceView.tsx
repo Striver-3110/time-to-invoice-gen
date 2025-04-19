@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
@@ -36,8 +37,13 @@ const InvoiceView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: invoice, isLoading: isLoadingInvoice } = useQuery({
+  const { 
+    data: invoice, 
+    isLoading: isLoadingInvoice,
+    refetch: refetchInvoice
+  } = useQuery({
     queryKey: ['invoice', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -130,7 +136,10 @@ const InvoiceView = () => {
       });
 
       // Refresh the invoice data to show updated status
-      await refetch();
+      await refetchInvoice();
+      
+      // Also invalidate invoices list to update it elsewhere in the app
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
     } catch (error) {
       console.error("Error sending invoice:", error);
       toast({
