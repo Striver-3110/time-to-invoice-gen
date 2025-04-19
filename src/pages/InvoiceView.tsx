@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +11,7 @@ import { InvoiceDetailsCard } from "@/components/invoice/InvoiceDetailsCard";
 import { ClientCard } from "@/components/invoice/ClientCard";
 import { BillingPeriodCard } from "@/components/invoice/BillingPeriodCard";
 import { InvoiceLineItemsTable } from "@/components/invoice/InvoiceLineItemsTable";
-import { isPast } from "date-fns";
+import { isPast, format } from "date-fns";
 import { PaymentDialog } from "@/components/invoice/PaymentDialog";
 import { useState } from "react";
 import { sendInvoiceEmail } from "@/utils/emailService";
