@@ -13,7 +13,7 @@ export const ClientCard = ({ name, email }: ClientCardProps) => {
         <CardTitle>Client</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="font-semibold">{name}</p>
+        <p className="font-semibold text-foreground">{name}</p>
         <p className="text-sm text-muted-foreground">{email}</p>
       </CardContent>
     </Card>

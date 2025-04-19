@@ -1,38 +1,27 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MoreVertical, Eye, FileDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { format, isPast } from "date-fns";
+import { InvoiceStatus } from "@/lib/types";
+import { InvoiceStatusBadge } from "@/components/invoice/InvoiceStatusBadge";
+import { PaymentDialog } from "@/components/invoice/PaymentDialog";
+import { toast } from "@/components/ui/sonner";
 import { 
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MoreVertical, Eye, FileDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { InvoiceStatus } from "@/lib/types";
-
-const getStatusColor = (status: InvoiceStatus) => {
-  switch (status) {
-    case InvoiceStatus.DRAFT:
-      return "bg-yellow-100 text-yellow-800";
-    case InvoiceStatus.SENT:
-      return "bg-blue-100 text-blue-800";
-    case InvoiceStatus.PAID:
-      return "bg-green-100 text-green-800";
-    case InvoiceStatus.OVERDUE:
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
 
 const Invoices = () => {
+  const queryClient = useQueryClient();
+
   const { data: invoiceList = [], isLoading } = useQuery({
     queryKey: ['invoices'],
     queryFn: async () => {
@@ -43,6 +32,7 @@ const Invoices = () => {
           invoice_number,
           invoice_date,
           due_date,
+          payment_date,
           total_amount,
           currency,
           status,
@@ -53,9 +43,35 @@ const Invoices = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+
+      return data.map(invoice => ({
+        ...invoice,
+        status: isPast(new Date(invoice.due_date)) && invoice.status === InvoiceStatus.SENT 
+          ? InvoiceStatus.OVERDUE 
+          : invoice.status
+      }));
     },
   });
+
+  const handleMarkAsPaid = async (invoiceId: string, paymentDate: Date) => {
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ 
+          status: InvoiceStatus.PAID,
+          payment_date: paymentDate.toISOString()
+        })
+        .eq('invoice_id', invoiceId);
+
+      if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success("Invoice marked as paid");
+    } catch (error) {
+      console.error('Error marking invoice as paid:', error);
+      toast.error("Failed to mark invoice as paid");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -97,30 +113,36 @@ const Invoices = () => {
                   <TableCell>{format(new Date(invoice.due_date), "MMM dd, yyyy")}</TableCell>
                   <TableCell>{invoice.currency} {invoice.total_amount.toFixed(2)}</TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(invoice.status as InvoiceStatus)} variant="outline">
-                      {invoice.status}
-                    </Badge>
+                    <InvoiceStatusBadge status={invoice.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <Link to={`/invoices/${invoice.invoice_id}`}>
+                    <div className="flex justify-end gap-2">
+                      {invoice.status === InvoiceStatus.SENT && (
+                        <PaymentDialog
+                          invoiceId={invoice.invoice_id}
+                          onPaymentSubmit={(date) => handleMarkAsPaid(invoice.invoice_id, date)}
+                        />
+                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <Link to={`/invoices/${invoice.invoice_id}`}>
+                            <DropdownMenuItem>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View
+                            </DropdownMenuItem>
+                          </Link>
                           <DropdownMenuItem>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View
+                            <FileDown className="h-4 w-4 mr-2" />
+                            Download PDF
                           </DropdownMenuItem>
-                        </Link>
-                        <DropdownMenuItem>
-                          <FileDown className="h-4 w-4 mr-2" />
-                          Download PDF
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -140,4 +162,3 @@ const Invoices = () => {
 };
 
 export default Invoices;
-
