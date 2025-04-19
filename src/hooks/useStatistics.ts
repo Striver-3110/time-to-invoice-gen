@@ -9,6 +9,12 @@ interface Statistics {
   activeProjects: number;
   activeEmployees: number;
   activeClients: number;
+  projectsPerClient: { client_name: string; project_count: number }[];
+  employeesPerProject: { project_name: string; employee_count: number }[];
+  employeeAssignmentStats: {
+    assigned: number;
+    unassigned: number;
+  };
 }
 
 export const useStatistics = () => {
@@ -22,6 +28,9 @@ export const useStatistics = () => {
         activeProjectsResponse,
         activeEmployeesResponse,
         activeClientsResponse,
+        projectsPerClientResponse,
+        employeesPerProjectResponse,
+        employeeAssignmentResponse
       ] = await Promise.all([
         supabase.from("projects").select('*', { count: 'exact', head: true }),
         supabase.from("employees").select('*', { count: 'exact', head: true }),
@@ -29,7 +38,43 @@ export const useStatistics = () => {
         supabase.from("projects").select('*', { count: 'exact', head: true }).eq("status", "ACTIVE"),
         supabase.from("employees").select('*', { count: 'exact', head: true }).eq("status", "ACTIVE"),
         supabase.from("clients").select('*', { count: 'exact', head: true }).eq("status", "ACTIVE"),
+        supabase
+          .from('clients')
+          .select(`
+            name,
+            projects:projects(count)
+          `),
+        supabase
+          .from('projects')
+          .select(`
+            project_name,
+            assignments:assignments(count)
+          `),
+        supabase
+          .from('employees')
+          .select('id')
+          .select(`
+            assigned:assignments(count)
+          `)
       ]);
+
+      // Transform projects per client data
+      const projectsPerClient = (projectsPerClientResponse.data || []).map(client => ({
+        client_name: client.name,
+        project_count: client.projects?.[0]?.count || 0
+      }));
+
+      // Transform employees per project data
+      const employeesPerProject = (employeesPerProjectResponse.data || []).map(project => ({
+        project_name: project.project_name,
+        employee_count: project.assignments?.[0]?.count || 0
+      }));
+
+      // Calculate assigned vs unassigned employees
+      const totalEmployees = totalEmployeesResponse.count || 0;
+      const assignedEmployees = employeeAssignmentResponse.data?.filter(
+        employee => (employee.assigned?.[0]?.count || 0) > 0
+      ).length || 0;
 
       return {
         totalProjects: totalProjectsResponse.count || 0,
@@ -38,6 +83,12 @@ export const useStatistics = () => {
         activeProjects: activeProjectsResponse.count || 0,
         activeEmployees: activeEmployeesResponse.count || 0,
         activeClients: activeClientsResponse.count || 0,
+        projectsPerClient,
+        employeesPerProject,
+        employeeAssignmentStats: {
+          assigned: assignedEmployees,
+          unassigned: totalEmployees - assignedEmployees
+        }
       };
     },
   });
