@@ -1,3 +1,4 @@
+
 import { Outlet } from "react-router-dom";
 import { 
   SidebarProvider, Sidebar, SidebarContent, 
@@ -9,7 +10,6 @@ import {
   Clock, 
   FileText, 
   Home, 
-  Settings,
   UserRoundPlus,
   Briefcase
 } from "lucide-react";
@@ -95,14 +95,7 @@ export function AppLayout() {
             </SidebarGroup>
           </SidebarContent>
           
-          <SidebarFooter className="px-6 py-4">
-            <Link to="/settings">
-              <div className="flex items-center space-x-2 text-muted-foreground hover:text-primary transition-colors">
-                <Settings className="h-4 w-4" />
-                <span className="text-sm">Settings</span>
-              </div>
-            </Link>
-          </SidebarFooter>
+          <SidebarFooter />
         </Sidebar>
         
         <div className="flex flex-col flex-1 overflow-x-hidden">

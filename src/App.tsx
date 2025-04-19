@@ -14,7 +14,6 @@ import TimeEntries from "./pages/TimeEntries";
 import Invoices from "./pages/Invoices";
 import InvoiceCreate from "./pages/InvoiceCreate";
 import InvoiceView from "./pages/InvoiceView";
-import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,7 +35,6 @@ const App = () => (
             <Route path="/invoices" element={<Invoices />} />
             <Route path="/invoices/create" element={<InvoiceCreate />} />
             <Route path="/invoices/:id" element={<InvoiceView />} />
-            <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
