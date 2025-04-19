@@ -3,21 +3,16 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MoreVertical, Eye, FileDown } from "lucide-react";
+import { MoreVertical, Eye, FileDown, Banknote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, isPast } from "date-fns";
 import { InvoiceStatus } from "@/lib/types";
 import { InvoiceStatusBadge } from "@/components/invoice/InvoiceStatusBadge";
 import { PaymentDialog } from "@/components/invoice/PaymentDialog";
 import { toast } from "@/components/ui/sonner";
-import { 
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const Invoices = () => {
   const queryClient = useQueryClient();
@@ -65,7 +60,7 @@ const Invoices = () => {
 
       if (error) throw error;
 
-      await queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast.success("Invoice marked as paid");
     } catch (error) {
       console.error('Error marking invoice as paid:', error);
@@ -123,12 +118,25 @@ const Invoices = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      {invoice.status === InvoiceStatus.SENT && (
-                        <PaymentDialog
-                          invoiceId={invoice.invoice_id}
-                          onPaymentSubmit={(date) => handleMarkAsPaid(invoice.invoice_id, date)}
-                        />
+                      {(invoice.status === InvoiceStatus.SENT || invoice.status === InvoiceStatus.OVERDUE) && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            const dialog = document.getElementById(`payment-dialog-${invoice.invoice_id}`);
+                            if (dialog) {
+                              (dialog as HTMLDialogElement).showModal();
+                            }
+                          }}
+                        >
+                          <Banknote className="h-4 w-4" />
+                        </Button>
                       )}
+                      <PaymentDialog
+                        invoiceId={invoice.invoice_id}
+                        onPaymentSubmit={(date) => handleMarkAsPaid(invoice.invoice_id, date)}
+                      />
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">

@@ -119,6 +119,34 @@ const InvoiceView = () => {
     }
   };
 
+  const sendInvoiceToClient = async () => {
+    if (!invoice) return;
+
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ status: InvoiceStatus.SENT })
+        .eq('invoice_id', invoice.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Invoice has been sent to client",
+      });
+
+      await refetchInvoice();
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    } catch (error) {
+      console.error("Error updating invoice status:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send invoice",
+      });
+    }
+  };
+
   const { data: lineItemsRaw = [], isLoading: isLoadingItems } = useQuery({
     queryKey: ['invoice-line-items', id],
     queryFn: async () => {
@@ -168,34 +196,6 @@ const InvoiceView = () => {
     }
   };
 
-  const sendInvoiceToClient = async () => {
-    if (!invoice || !lineItems) return;
-
-    try {
-      const { error } = await supabase
-        .from('invoices')
-        .update({ status: 'SENT' })
-        .eq('invoice_id', invoice.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Invoice has been marked as sent",
-      });
-
-      await refetchInvoice();
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-    } catch (error) {
-      console.error("Error updating invoice status:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to mark invoice as sent",
-      });
-    }
-  };
-
   if (isLoadingInvoice || isLoadingItems) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -226,7 +226,7 @@ const InvoiceView = () => {
             <Download className="h-4 w-4 mr-2" />
             Download PDF
           </Button>
-          {invoice.status === InvoiceStatus.SENT && (
+          {invoice.status === InvoiceStatus.DRAFT && (
             <Button onClick={sendInvoiceToClient}>
               <Send className="h-4 w-4 mr-2" />
               Send to Client
