@@ -30,7 +30,13 @@ import {
 import { CalendarIcon } from "lucide-react";
 
 interface TimeEntryFormProps {
-  timeEntry?: any;
+  timeEntry?: {
+    id?: string;
+    employee_id: string;
+    project_id: string;
+    date: string;
+    hours: number;
+  };
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -67,7 +73,6 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
-      // Fix: use direct table access instead of ".from('time_entries')"
       const { error } = timeEntry?.id
         ? await supabase
             .from('time_entries')

@@ -18,46 +18,39 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface TimeEntryListProps {
-  onEdit: (timeEntry: any) => void;
+interface TimeEntry {
+  id: string;
+  employee_id: string;
+  project_id: string;
+  date: string;
+  hours: number;
+  employee?: {
+    first_name: string;
+    last_name: string;
+  };
+  project?: {
+    project_name: string;
+  };
 }
 
-export function TimeEntryList({ onEdit }: TimeEntryListProps) {
+export function TimeEntryList({ onEdit }: { onEdit: (timeEntry: TimeEntry) => void }) {
   const { toast } = useToast();
   const [timeEntryToDelete, setTimeEntryToDelete] = useState<string | null>(null);
 
   const { data: timeEntries, isLoading, refetch } = useQuery({
     queryKey: ['time-entries'],
     queryFn: async () => {
-      try {
-        // Fix: Use proper query structure to get employee and project data
-        const { data, error } = await supabase
-          .from('time_entries')
-          .select(`
-            *,
-            employee:employee_id(
-              first_name,
-              last_name
-            ),
-            project:project_id(
-              project_name
-            )
-          `)
-          .order('date', { ascending: false });
+      const { data, error } = await supabase
+        .from('time_entries')
+        .select(`
+          *,
+          employee:employees(first_name, last_name),
+          project:projects(project_name)
+        `)
+        .order('date', { ascending: false });
 
-        if (error) {
-          console.error("Supabase query error:", error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not fetch time entries"
-          });
-          throw error;
-        }
-
-        return data;
-      } catch (error) {
-        console.error("Query error:", error);
+      if (error) {
+        console.error("Supabase query error:", error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -65,11 +58,12 @@ export function TimeEntryList({ onEdit }: TimeEntryListProps) {
         });
         throw error;
       }
+
+      return data as TimeEntry[];
     }
   });
 
   const handleDelete = async (id: string) => {
-    // Fix: Direct table access
     const { error } = await supabase
       .from('time_entries')
       .delete()
