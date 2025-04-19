@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Save } from "lucide-react";
 import { ClientList } from "@/components/clients/ClientList";
 import { ClientForm } from "@/components/clients/ClientForm";
 
@@ -30,14 +30,14 @@ const Clients = () => {
         <h1 className="text-2xl font-bold">Clients</h1>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Client
+          Add
         </Button>
       </div>
 
       {showForm ? (
         <div className="border rounded-lg p-4">
           <h2 className="text-lg font-semibold mb-4">
-            {editingClient ? 'Edit Client' : 'New Client'}
+            {editingClient ? 'Edit' : 'New'}
           </h2>
           <ClientForm
             client={editingClient}

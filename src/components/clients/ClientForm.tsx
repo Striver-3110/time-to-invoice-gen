@@ -47,12 +47,12 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not save client"
+        description: "Could not save"
       });
     } else {
       toast({
         title: "Success",
-        description: `Client ${client ? 'updated' : 'created'} successfully`
+        description: `Saved successfully`
       });
       onSuccess();
     }
@@ -142,7 +142,7 @@ export function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
             Cancel
           </Button>
           <Button type="submit">
-            {client ? 'Update' : 'Create'} Client
+            {client ? 'Save' : 'Add'}
           </Button>
         </div>
       </form>
