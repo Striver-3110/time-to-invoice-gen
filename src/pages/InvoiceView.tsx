@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +11,6 @@ import { ClientCard } from "@/components/invoice/ClientCard";
 import { BillingPeriodCard } from "@/components/invoice/BillingPeriodCard";
 import { InvoiceLineItemsTable } from "@/components/invoice/InvoiceLineItemsTable";
 
-// Helper function to transform data from Supabase format to our application's types
 const transformInvoiceData = (data: any): Invoice => {
   return {
     id: data.invoice_id,
@@ -113,7 +111,6 @@ const InvoiceView = () => {
     enabled: !!id
   });
 
-  // Transform the data to match our application's types
   const invoice = rawInvoiceData ? transformInvoiceData(rawInvoiceData) : null;
   const lineItems = lineItemsRaw || [];
 
@@ -135,27 +132,26 @@ const InvoiceView = () => {
     if (!invoice || !lineItems) return;
 
     try {
-      await generateInvoicePDF(invoice, transformLineItemData(lineItems));
-      
-      const { data, error } = await supabase.functions.invoke('send-invoice', {
-        body: { invoice, lineItems: transformLineItemData(lineItems) },
-      });
+      const { error } = await supabase
+        .from('invoices')
+        .update({ status: 'SENT' })
+        .eq('invoice_id', invoice.id);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Invoice has been sent to the client",
+        description: "Invoice has been marked as sent",
       });
 
       await refetchInvoice();
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
     } catch (error) {
-      console.error("Error sending invoice:", error);
+      console.error("Error updating invoice status:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to send invoice to client",
+        description: "Failed to mark invoice as sent",
       });
     }
   };
