@@ -48,22 +48,37 @@ export function ProjectList({
   } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select(`
-          *,
-          client:clients(name),
-          assignments:assignments(
-            employee:employees(
-              first_name,
-              last_name,
-              designation
+      // First attempt with assignments:assignments instead of assignments!projects_id_fkey
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select(`
+            *,
+            client:clients(name),
+            assignments(
+              employee:employees(
+                first_name,
+                last_name,
+                designation
+              )
             )
-          )
-        `)
-        .order('project_name');
-      
-      if (error) {
+          `)
+          .order('project_name');
+        
+        if (error) {
+          console.error("Supabase query error:", error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not fetch projects"
+          });
+          throw error;
+        }
+        
+        console.log("Projects data:", data);
+        return data;
+      } catch (error) {
+        console.error("Query error:", error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -71,7 +86,6 @@ export function ProjectList({
         });
         throw error;
       }
-      return data;
     }
   });
 
@@ -131,7 +145,7 @@ export function ProjectList({
           </TableHeader>
           <TableBody>
             {projects?.map(project => {
-              // This ensures assignments is always an array, even if the relation wasn't found
+              // Safely handle assignments, ensuring it's an array
               const employees = project.assignments && Array.isArray(project.assignments) 
                 ? project.assignments
                     .map(assignment => assignment.employee)
