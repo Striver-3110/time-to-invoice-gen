@@ -74,29 +74,26 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
     }
   });
 
-  // Fix: Use explicit typing to avoid excessively deep type instantiation
+  // Fix: The root cause of the deep type instantiation
+  // We need to completely avoid the nested type structure from Supabase
   const { data: availableProjects = [] } = useQuery<ProjectData[]>({
     queryKey: ['assigned-projects', form.watch('employee_id')],
     queryFn: async () => {
       if (!form.watch('employee_id')) return [];
       
+      // Direct join query instead of nested selects to avoid deep type inference
       const { data, error } = await supabase
         .from('assignments')
-        .select(`
-          project:projects(
-            id,
-            project_name
-          )
-        `)
+        .select('project_id, projects(id, project_name)')
         .eq('employee_id', form.watch('employee_id'))
         .eq('status', 'ACTIVE');
 
       if (error) throw error;
       
-      // Extract and transform the projects from the nested structure
-      return data.map(assignment => ({
-        id: assignment.project.id,
-        project_name: assignment.project.project_name
+      // Transform data to flat structure immediately to avoid deep type nesting
+      return data.map(item => ({
+        id: item.projects?.id || '',
+        project_name: item.projects?.project_name || ''
       }));
     },
     enabled: !!form.watch('employee_id')
