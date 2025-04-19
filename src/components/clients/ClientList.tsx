@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ClientStatus } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,7 +94,7 @@ export function ClientList({ onEdit }: { onEdit: (client: Client) => void }) {
         </TableHeader>
         <TableBody>
           {clients?.map((client) => (
-            <TableRow key={client.id} className="hover:bg-muted/50 transition-colors">
+            <TableRow key={client.id} className="hover:bg-muted/50 transition-colors group">
               <TableCell className="font-medium">{client.name}</TableCell>
               <TableCell>{client.contact_email}</TableCell>
               <TableCell>{new Date(client.contract_start_date).toLocaleDateString()}</TableCell>
@@ -104,12 +105,12 @@ export function ClientList({ onEdit }: { onEdit: (client: Client) => void }) {
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={() => onEdit(client)}
-                    className="hover:bg-blue-500/15 hover:text-blue-700 transition-colors"
+                    className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 transition-colors duration-200 ease-in-out transform hover:scale-105"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -117,7 +118,7 @@ export function ClientList({ onEdit }: { onEdit: (client: Client) => void }) {
                     variant="outline"
                     size="icon"
                     onClick={() => handleDelete(client.id)}
-                    className="hover:bg-red-500/15 hover:text-red-700 transition-colors"
+                    className="bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 transition-colors duration-200 ease-in-out transform hover:scale-105"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -130,3 +131,4 @@ export function ClientList({ onEdit }: { onEdit: (client: Client) => void }) {
     </div>
   );
 }
+
