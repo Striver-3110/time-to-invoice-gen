@@ -13,6 +13,7 @@ import { InvoiceLineItemsTable } from "@/components/invoice/InvoiceLineItemsTabl
 import { isPast } from "date-fns";
 import { PaymentDialog } from "@/components/invoice/PaymentDialog";
 import { useState } from "react";
+import { sendInvoiceEmail } from "@/utils/emailService";
 
 const transformInvoiceData = (data: any): Invoice => {
   return {
@@ -122,9 +123,17 @@ const InvoiceView = () => {
   };
 
   const sendInvoiceToClient = async () => {
-    if (!invoice) return;
+    if (!invoice || !rawInvoiceData?.clients) return;
 
     try {
+      await sendInvoiceEmail({
+        to_email: rawInvoiceData.clients.contact_email,
+        to_name: rawInvoiceData.clients.name,
+        invoice_number: invoice.invoiceNumber,
+        invoice_amount: `${invoice.currency} ${invoice.totalAmount.toFixed(2)}`,
+        due_date: format(invoice.dueDate, "MMM dd, yyyy")
+      });
+
       const { error } = await supabase
         .from('invoices')
         .update({ status: InvoiceStatus.SENT })
@@ -140,7 +149,7 @@ const InvoiceView = () => {
       await refetchInvoice();
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
     } catch (error) {
-      console.error("Error updating invoice status:", error);
+      console.error("Error sending invoice:", error);
       toast({
         variant: "destructive",
         title: "Error",
