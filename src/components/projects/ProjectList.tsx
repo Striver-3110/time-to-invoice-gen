@@ -1,12 +1,12 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { AssignEmployeeSheet } from "./AssignEmployeeSheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +37,7 @@ export function ProjectList({
 }) {
   const { toast } = useToast();
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
 
   const {
     data: projects,
@@ -83,9 +84,13 @@ export function ProjectList({
     setProjectToDelete(null);
   };
 
+  const handleAssignEmployee = (projectId: string) => {
+    setSelectedProject(projectId);
+  };
+
   if (isLoading) return <div className="flex items-center justify-center h-64">
-      <div className="animate-pulse text-muted-foreground">Loading...</div>
-    </div>;
+    <div className="animate-pulse text-muted-foreground">Loading...</div>
+  </div>;
 
   const getStatusColor = (status: Project['status']) => {
     switch (status) {
@@ -131,6 +136,14 @@ export function ProjectList({
                     <Button 
                       variant="outline" 
                       size="icon"
+                      onClick={() => handleAssignEmployee(project.id)}
+                      className="text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 border-violet-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
                       onClick={() => onEdit(project)}
                       className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
                     >
@@ -151,6 +164,16 @@ export function ProjectList({
           </TableBody>
         </Table>
       </div>
+
+      <AssignEmployeeSheet
+        isOpen={!!selectedProject}
+        onClose={() => setSelectedProject(null)}
+        projectId={selectedProject || ""}
+        onSuccess={() => {
+          refetch();
+          setSelectedProject(null);
+        }}
+      />
 
       <AlertDialog open={!!projectToDelete} onOpenChange={() => setProjectToDelete(null)}>
         <AlertDialogContent>

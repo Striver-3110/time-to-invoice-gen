@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assignments: {
+        Row: {
+          created_at: string
+          employee_id: string
+          end_date: string
+          id: string
+          project_id: string
+          start_date: string
+          status: Database["public"]["Enums"]["assignment_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          end_date: string
+          id?: string
+          project_id: string
+          start_date: string
+          status?: Database["public"]["Enums"]["assignment_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          end_date?: string
+          id?: string
+          project_id?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["assignment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           contact_email: string
@@ -127,6 +175,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      assignment_status: "ACTIVE" | "COMPLETED"
       employee_status: "ACTIVE" | "INACTIVE"
       project_status: "ACTIVE" | "COMPLETED" | "ON_HOLD"
     }
@@ -244,6 +293,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      assignment_status: ["ACTIVE", "COMPLETED"],
       employee_status: ["ACTIVE", "INACTIVE"],
       project_status: ["ACTIVE", "COMPLETED", "ON_HOLD"],
     },
