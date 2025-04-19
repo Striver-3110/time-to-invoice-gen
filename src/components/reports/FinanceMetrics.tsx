@@ -1,7 +1,6 @@
-
 import { Card } from "@/components/ui/card";
 import { useStatistics } from "@/hooks/useStatistics";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
 import { Building2, Users, Briefcase } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/StatsCard";
@@ -9,11 +8,6 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 export const FinanceMetrics = () => {
   const { data: stats } = useStatistics();
   
-  const projectDistribution = stats?.projectsPerClient.map(item => ({
-    name: item.client_name,
-    value: item.project_count
-  })) || [];
-
   const COLORS = ['#9b87f5', '#7E69AB', '#6E59A5', '#D6BCFA'];
 
   return (
@@ -41,41 +35,73 @@ export const FinanceMetrics = () => {
         />
       </div>
 
-      <Card className="p-4">
-        <h3 className="text-lg font-semibold mb-4">Projects per Client</h3>
-        <div className="h-[300px]">
-          <ChartContainer
-            config={{
-              series1: {
-                theme: {
-                  light: "#9b87f5",
-                  dark: "#7E69AB"
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="p-4">
+          <h3 className="text-lg font-semibold mb-4">Client Contract Status Distribution</h3>
+          <div className="h-[300px]">
+            <ChartContainer
+              config={{
+                series1: {
+                  theme: {
+                    light: "#9b87f5",
+                    dark: "#7E69AB"
+                  }
                 }
-              }
-            }}
-          >
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={projectDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
-                  {projectDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </div>
-      </Card>
+              }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stats?.clientContractStatus}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="count"
+                    nameKey="status"
+                    label={({ status, count }) => `${status}: ${count}`}
+                  >
+                    {stats?.clientContractStatus.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <h3 className="text-lg font-semibold mb-4">Projects Per Client</h3>
+          <div className="h-[300px]">
+            <ChartContainer
+              config={{
+                series1: {
+                  theme: {
+                    light: "#9b87f5",
+                    dark: "#7E69AB"
+                  }
+                }
+              }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats?.projectsPerClient}>
+                  <XAxis dataKey="client_name" angle={-45} textAnchor="end" height={80} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar
+                    dataKey="project_count"
+                    fill="var(--color-series1)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

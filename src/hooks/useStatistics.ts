@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,6 +14,10 @@ interface Statistics {
     assigned: number;
     unassigned: number;
   };
+  employeesByDesignation: { designation: string; count: number }[];
+  projectStatusDistribution: { status: string; count: number }[];
+  timeEntriesByMonth: { month: string; total_hours: number }[];
+  clientContractStatus: { status: string; count: number }[];
 }
 
 export const useStatistics = () => {
@@ -30,7 +33,11 @@ export const useStatistics = () => {
         activeClientsResponse,
         projectsPerClientResponse,
         employeesPerProjectResponse,
-        employeeAssignmentResponse
+        employeeAssignmentResponse,
+        employeeDesignationsResponse,
+        projectStatusResponse,
+        timeEntriesResponse,
+        clientContractResponse
       ] = await Promise.all([
         supabase.from("projects").select('*', { count: 'exact', head: true }),
         supabase.from("employees").select('*', { count: 'exact', head: true }),
@@ -55,7 +62,64 @@ export const useStatistics = () => {
           .select('id')
           .select(`
             assigned:assignments(count)
-          `)
+          `),
+
+        supabase
+          .from('employees')
+          .select('designation')
+          .then(({ data }) => {
+            const designations = data?.reduce((acc, { designation }) => {
+              acc[designation] = (acc[designation] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+            return Object.entries(designations || {}).map(([designation, count]) => ({
+              designation,
+              count
+            }));
+          }),
+
+        supabase
+          .from('projects')
+          .select('status')
+          .then(({ data }) => {
+            const statuses = data?.reduce((acc, { status }) => {
+              acc[status] = (acc[status] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+            return Object.entries(statuses || {}).map(([status, count]) => ({
+              status,
+              count
+            }));
+          }),
+
+        supabase
+          .from('time_entries')
+          .select('date, hours')
+          .then(({ data }) => {
+            const monthlyHours = data?.reduce((acc, { date, hours }) => {
+              const month = new Date(date).toLocaleString('default', { month: 'long', year: 'numeric' });
+              acc[month] = (acc[month] || 0) + Number(hours);
+              return acc;
+            }, {} as Record<string, number>);
+            return Object.entries(monthlyHours || {}).map(([month, total_hours]) => ({
+              month,
+              total_hours
+            }));
+          }),
+
+        supabase
+          .from('clients')
+          .select('status')
+          .then(({ data }) => {
+            const statuses = data?.reduce((acc, { status }) => {
+              acc[status] = (acc[status] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+            return Object.entries(statuses || {}).map(([status, count]) => ({
+              status,
+              count
+            }));
+          })
       ]);
 
       // Transform projects per client data
@@ -88,7 +152,11 @@ export const useStatistics = () => {
         employeeAssignmentStats: {
           assigned: assignedEmployees,
           unassigned: totalEmployees - assignedEmployees
-        }
+        },
+        employeesByDesignation: employeeDesignationsResponse,
+        projectStatusDistribution: projectStatusResponse,
+        timeEntriesByMonth: timeEntriesResponse,
+        clientContractStatus: clientContractResponse
       };
     },
   });
