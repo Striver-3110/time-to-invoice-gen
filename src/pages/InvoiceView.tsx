@@ -112,6 +112,35 @@ const InvoiceView = () => {
     }
   };
 
+  const sendInvoiceToClient = async () => {
+    if (!invoice || !lineItems) return;
+
+    try {
+      await generateInvoicePDF(invoice, lineItems);
+      
+      const { data, error } = await supabase.functions.invoke('send-invoice', {
+        body: { invoice, lineItems },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Invoice has been sent to the client",
+      });
+
+      // Refresh the invoice data to show updated status
+      await refetch();
+    } catch (error) {
+      console.error("Error sending invoice:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send invoice to client",
+      });
+    }
+  };
+
   if (isLoadingInvoice || isLoadingItems) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -143,7 +172,7 @@ const InvoiceView = () => {
             Download PDF
           </Button>
           {invoice.status === InvoiceStatus.DRAFT && (
-            <Button>
+            <Button onClick={sendInvoiceToClient}>
               <Send className="h-4 w-4 mr-2" />
               Send to Client
             </Button>
