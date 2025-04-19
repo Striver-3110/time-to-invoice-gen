@@ -1,6 +1,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle 
 } from "@/components/ui/card";
@@ -11,9 +13,9 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Download, Send } from "lucide-react";
-import { invoices, invoiceLineItems, clients, employees, projects } from "@/lib/mock-data";
-import { Invoice, InvoiceStatus, InvoiceLineItem } from "@/lib/types";
 import { format } from "date-fns";
+import { InvoiceStatus } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 const getStatusColor = (status: InvoiceStatus) => {
   switch (status) {
@@ -33,38 +35,86 @@ const getStatusColor = (status: InvoiceStatus) => {
 const InvoiceView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([]);
-  const [clientName, setClientName] = useState<string>("");
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const foundInvoice = invoices.find(inv => inv.id === id);
-    if (foundInvoice) {
-      setInvoice(foundInvoice);
-      
-      // Get client name
-      const client = clients.find(c => c.id === foundInvoice.clientId);
-      setClientName(client?.name || "Unknown Client");
-      
-      // Get line items
-      const items = invoiceLineItems.filter(item => item.invoiceId === foundInvoice.id);
-      setLineItems(items);
-    }
-  }, [id]);
+  // Fetch invoice details
+  const { data: invoice, isLoading: isLoadingInvoice } = useQuery({
+    queryKey: ['invoice', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select(`
+          *,
+          clients (
+            name,
+            contact_email
+          )
+        `)
+        .eq('invoice_id', id)
+        .single();
 
-  if (!invoice) {
-    return <div>Loading invoice...</div>;
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not fetch invoice details"
+        });
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!id
+  });
+
+  // Fetch line items
+  const { data: lineItems = [], isLoading: isLoadingItems } = useQuery({
+    queryKey: ['invoice-line-items', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('invoice_line_items')
+        .select(`
+          *,
+          employees (
+            first_name,
+            last_name,
+            designation
+          ),
+          projects (
+            project_name
+          )
+        `)
+        .eq('invoice_id', id);
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not fetch invoice line items"
+        });
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: !!id
+  });
+
+  if (isLoadingInvoice || isLoadingItems) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-muted-foreground">Loading invoice details...</p>
+      </div>
+    );
   }
 
-  const getEmployeeName = (employeeId: string) => {
-    const employee = employees.find(e => e.id === employeeId);
-    return employee ? `${employee.firstName} ${employee.lastName}` : "Unknown Employee";
-  };
-
-  const getProjectName = (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
-    return project?.projectName || "Unknown Project";
-  };
+  if (!invoice) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-muted-foreground">Invoice not found</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -73,7 +123,7 @@ const InvoiceView = () => {
           <Button variant="outline" size="icon" onClick={() => navigate(-1)} className="mr-4">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-2xl font-bold">Invoice #{invoice.invoiceNumber}</h1>
+          <h1 className="text-2xl font-bold text-primary">Invoice #{invoice.invoice_number}</h1>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
@@ -99,23 +149,23 @@ const InvoiceView = () => {
               <div className="flex justify-between">
                 <dt className="font-medium">Status:</dt>
                 <dd>
-                  <Badge className={getStatusColor(invoice.status)} variant="outline">
+                  <Badge className={getStatusColor(invoice.status as InvoiceStatus)} variant="outline">
                     {invoice.status}
                   </Badge>
                 </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="font-medium">Invoice Date:</dt>
-                <dd>{format(new Date(invoice.invoiceDate), "MMM dd, yyyy")}</dd>
+                <dd>{format(new Date(invoice.invoice_date), "MMM dd, yyyy")}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="font-medium">Due Date:</dt>
-                <dd>{format(new Date(invoice.dueDate), "MMM dd, yyyy")}</dd>
+                <dd>{format(new Date(invoice.due_date), "MMM dd, yyyy")}</dd>
               </div>
-              {invoice.paymentDate && (
+              {invoice.payment_date && (
                 <div className="flex justify-between">
                   <dt className="font-medium">Payment Date:</dt>
-                  <dd>{format(new Date(invoice.paymentDate), "MMM dd, yyyy")}</dd>
+                  <dd>{format(new Date(invoice.payment_date), "MMM dd, yyyy")}</dd>
                 </div>
               )}
             </dl>
@@ -127,7 +177,8 @@ const InvoiceView = () => {
             <CardTitle>Client</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="font-semibold">{clientName}</p>
+            <p className="font-semibold">{invoice.clients?.name}</p>
+            <p className="text-sm text-muted-foreground">{invoice.clients?.contact_email}</p>
           </CardContent>
         </Card>
 
@@ -139,11 +190,11 @@ const InvoiceView = () => {
             <dl className="space-y-2">
               <div className="flex justify-between">
                 <dt className="font-medium">Start Date:</dt>
-                <dd>{format(new Date(invoice.billingPeriodStart), "MMM dd, yyyy")}</dd>
+                <dd>{format(new Date(invoice.billing_period_start), "MMM dd, yyyy")}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="font-medium">End Date:</dt>
-                <dd>{format(new Date(invoice.billingPeriodEnd), "MMM dd, yyyy")}</dd>
+                <dd>{format(new Date(invoice.billing_period_end), "MMM dd, yyyy")}</dd>
               </div>
             </dl>
           </CardContent>
@@ -167,13 +218,15 @@ const InvoiceView = () => {
             </TableHeader>
             <TableBody>
               {lineItems.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{item.serviceDescription}</TableCell>
-                  <TableCell>{getProjectName(item.projectId)}</TableCell>
-                  <TableCell>{getEmployeeName(item.employeeId)}</TableCell>
+                <TableRow key={item.line_item_id}>
+                  <TableCell>{item.service_description}</TableCell>
+                  <TableCell>{item.projects?.project_name}</TableCell>
+                  <TableCell>
+                    {item.employees?.designation}
+                  </TableCell>
                   <TableCell>{item.quantity} hours</TableCell>
                   <TableCell className="text-right">
-                    {invoice.currency} {item.totalAmount.toFixed(2)}
+                    {invoice.currency} {item.total_amount.toFixed(2)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -185,7 +238,7 @@ const InvoiceView = () => {
             <div className="flex justify-between w-64">
               <span className="font-semibold">Total Amount:</span>
               <span className="font-bold">
-                {invoice.currency} {invoice.totalAmount.toFixed(2)}
+                {invoice.currency} {invoice.total_amount.toFixed(2)}
               </span>
             </div>
           </div>
