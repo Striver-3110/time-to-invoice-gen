@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { 
   SidebarProvider, Sidebar, SidebarContent, SidebarTrigger, 
-  SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarFooter 
+  SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, 
+  SidebarGroup, SidebarFooter 
 } from "@/components/ui/sidebar";
 import { 
   BarChart3, 
@@ -12,94 +13,105 @@ import {
   Clipboard, 
   FileText, 
   Home, 
-  Settings 
+  Settings,
+  UserRoundPlus,
+  LayoutGrid,
+  Briefcase
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 export function AppLayout() {
+  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  const menuItems = [
+    { 
+      icon: Home, 
+      label: "Dashboard", 
+      path: "/",
+      color: "text-blue-500 group-hover:text-blue-600"
+    },
+    { 
+      icon: UserRoundPlus, 
+      label: "Clients", 
+      path: "/clients", 
+      color: "text-green-500 group-hover:text-green-600"
+    },
+    { 
+      icon: Briefcase, 
+      label: "Projects", 
+      path: "/projects", 
+      color: "text-purple-500 group-hover:text-purple-600"
+    },
+    { 
+      icon: Users, 
+      label: "Employees", 
+      path: "/employees", 
+      color: "text-orange-500 group-hover:text-orange-600"
+    },
+    { 
+      icon: Clock, 
+      label: "Time Entries", 
+      path: "/time-entries", 
+      color: "text-teal-500 group-hover:text-teal-600"
+    },
+    { 
+      icon: FileText, 
+      label: "Invoices", 
+      path: "/invoices", 
+      color: "text-red-500 group-hover:text-red-600"
+    },
+    { 
+      icon: BarChart3, 
+      label: "Reports", 
+      path: "/reports", 
+      color: "text-indigo-500 group-hover:text-indigo-600"
+    }
+  ];
   
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <Sidebar>
-          <SidebarHeader className="px-6">
-            <h2 className="text-xl font-semibold">InvoiceGen</h2>
+          <SidebarHeader className="px-6 pt-4">
+            <h2 className="text-2xl font-bold text-primary">InvoiceGen</h2>
           </SidebarHeader>
           
           <SidebarContent>
             <SidebarGroup>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link to="/">
-                      <Home className="h-5 w-5" />
-                      <span>Dashboard</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link to="/clients">
-                      <Users className="h-5 w-5" />
-                      <span>Clients</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link to="/projects">
-                      <Clipboard className="h-5 w-5" />
-                      <span>Projects</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link to="/employees">
-                      <Users className="h-5 w-5" />
-                      <span>Employees</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link to="/time-entries">
-                      <Clock className="h-5 w-5" />
-                      <span>Time Entries</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild className={cn("bg-primary text-white hover:bg-primary/90")} data-active="true">
-                    <Link to="/invoices">
-                      <FileText className="h-5 w-5" />
-                      <span>Invoices</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link to="/reports">
-                      <BarChart3 className="h-5 w-5" />
-                      <span>Reports</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {menuItems.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton 
+                      asChild 
+                      className={cn(
+                        "group w-full", 
+                        location.pathname === item.path && "bg-primary/10"
+                      )}
+                    >
+                      <Link to={item.path} className="flex items-center gap-3">
+                        <item.icon className={cn(
+                          "h-5 w-5", 
+                          item.color,
+                          location.pathname === item.path && "font-bold"
+                        )} />
+                        <span className={
+                          location.pathname === item.path ? "font-semibold" : ""
+                        }>
+                          {item.label}
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
               </SidebarMenu>
             </SidebarGroup>
           </SidebarContent>
           
           <SidebarFooter className="px-6 py-4">
             <Link to="/settings">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 text-muted-foreground hover:text-primary transition-colors">
                 <Settings className="h-4 w-4" />
                 <span className="text-sm">Settings</span>
               </div>
