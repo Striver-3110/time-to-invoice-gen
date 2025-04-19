@@ -7,6 +7,7 @@ import { Edit, Trash2, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { AssignEmployeeSheet } from "./AssignEmployeeSheet";
+import { EmployeeCountPopover } from "./EmployeeCountPopover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,7 +51,14 @@ export function ProjectList({
         .from('projects')
         .select(`
           *,
-          client:clients(name)
+          client:clients(name),
+          assignments!projects_id_fkey(
+            employee:employees(
+              first_name,
+              last_name,
+              designation
+            )
+          )
         `)
         .order('project_name');
       
@@ -62,7 +70,7 @@ export function ProjectList({
         });
         throw error;
       }
-      return data as Project[];
+      return data;
     }
   });
 
@@ -115,52 +123,65 @@ export function ProjectList({
               <TableHead className="font-semibold">Client</TableHead>
               <TableHead className="font-semibold">Start Date</TableHead>
               <TableHead className="font-semibold">End Date</TableHead>
+              <TableHead className="font-semibold">Employees</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
               <TableHead className="font-semibold text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projects?.map(project => (
-              <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
-                <TableCell className="font-medium">{project.project_name}</TableCell>
-                <TableCell>{project.client?.name}</TableCell>
-                <TableCell>{new Date(project.start_date).toLocaleDateString()}</TableCell>
-                <TableCell>{new Date(project.end_date).toLocaleDateString()}</TableCell>
-                <TableCell>
-                  <Badge className={`${getStatusColor(project.status)}`}>
-                    {project.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={() => handleAssignEmployee(project.id)}
-                      className="text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 border-violet-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
-                    >
-                      <UserPlus className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={() => onEdit(project)}
-                      className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon"
-                      onClick={() => setProjectToDelete(project.id)}
-                      className="text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+            {projects?.map(project => {
+              const employees = project.assignments
+                ?.map(assignment => assignment.employee)
+                .filter(Boolean) || [];
+
+              return (
+                <TableRow key={project.id} className="hover:bg-muted/50 transition-colors">
+                  <TableCell className="font-medium">{project.project_name}</TableCell>
+                  <TableCell>{project.client?.name}</TableCell>
+                  <TableCell>{new Date(project.start_date).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(project.end_date).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <EmployeeCountPopover 
+                      employees={employees}
+                      count={employees.length}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={`${getStatusColor(project.status)}`}>
+                      {project.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => handleAssignEmployee(project.id)}
+                        className="text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 border-violet-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => onEdit(project)}
+                        className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => setProjectToDelete(project.id)}
+                        className="text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
