@@ -118,25 +118,12 @@ const Invoices = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      {(invoice.status === InvoiceStatus.SENT || invoice.status === InvoiceStatus.OVERDUE) && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => {
-                            const dialog = document.getElementById(`payment-dialog-${invoice.invoice_id}`);
-                            if (dialog) {
-                              (dialog as HTMLDialogElement).showModal();
-                            }
-                          }}
-                        >
-                          <Banknote className="h-4 w-4" />
-                        </Button>
+                      {(invoice.status === InvoiceStatus.SENT || invoice.status === InvoiceStatus.OVERDUE) && !invoice.payment_date && (
+                        <PaymentDialog
+                          invoiceId={invoice.invoice_id}
+                          onPaymentSubmit={(date) => handleMarkAsPaid(invoice.invoice_id, date)}
+                        />
                       )}
-                      <PaymentDialog
-                        invoiceId={invoice.invoice_id}
-                        onPaymentSubmit={(date) => handleMarkAsPaid(invoice.invoice_id, date)}
-                      />
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
