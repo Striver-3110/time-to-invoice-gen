@@ -65,16 +65,12 @@ export const generateInvoicePDF = async (invoice: any, lineItems: any[]) => {
           </tfoot>
         </table>
       </div>
-
-      <div style="text-align: center; margin-top: 20px;">
-        <img src="/lovable-uploads/6adc8800-f35a-45f8-89f1-01ff9a97c7be.png" alt="footer" style="width: 100%; max-height: 100px; object-fit: contain;" />
-      </div>
     </div>
   `;
 
   // PDF generation options
   const opt = {
-    margin: 10,
+    margin: [10, 10, 10, 10],
     filename: `invoice-${invoice.invoice_number}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { 
