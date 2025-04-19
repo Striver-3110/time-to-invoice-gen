@@ -1,8 +1,8 @@
-import { useState } from "react";
+
 import { Outlet } from "react-router-dom";
 import { 
-  SidebarProvider, Sidebar, SidebarContent, SidebarTrigger, 
-  SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, 
+  SidebarProvider, Sidebar, SidebarContent, 
+  SidebarHeader, SidebarMenu, SidebarMenuItem, 
   SidebarGroup, SidebarFooter 
 } from "@/components/ui/sidebar";
 import { 
@@ -69,10 +69,9 @@ export function AppLayout() {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <Sidebar>
-          <SidebarHeader className="flex items-center justify-between px-6 pt-4">
+        <Sidebar variant="sidebar" collapsible="none">
+          <SidebarHeader className="px-6 pt-4">
             <h2 className="text-2xl font-bold text-primary">InvoiceGen</h2>
-            <SidebarTrigger />
           </SidebarHeader>
           
           <SidebarContent>
@@ -80,27 +79,24 @@ export function AppLayout() {
               <SidebarMenu>
                 {menuItems.map((item) => (
                   <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton 
-                      asChild 
+                    <Link 
+                      to={item.path} 
                       className={cn(
-                        "group w-full", 
+                        "group flex w-full items-center gap-3 px-4 py-2 hover:bg-primary/10", 
                         location.pathname === item.path && "bg-primary/10"
                       )}
-                      tooltip={item.label}
                     >
-                      <Link to={item.path} className="flex items-center gap-3">
-                        <item.icon className={cn(
-                          "h-5 w-5", 
-                          item.color,
-                          location.pathname === item.path && "font-bold"
-                        )} />
-                        <span className={
-                          location.pathname === item.path ? "font-semibold" : ""
-                        }>
-                          {item.label}
-                        </span>
-                      </Link>
-                    </SidebarMenuButton>
+                      <item.icon className={cn(
+                        "h-5 w-5", 
+                        item.color,
+                        location.pathname === item.path && "font-bold"
+                      )} />
+                      <span className={
+                        location.pathname === item.path ? "font-semibold" : ""
+                      }>
+                        {item.label}
+                      </span>
+                    </Link>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
