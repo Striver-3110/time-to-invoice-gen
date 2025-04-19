@@ -32,6 +32,13 @@ interface EmployeeFormData {
   status: EmployeeStatus;
 }
 
+const DESIGNATIONS = [
+  "Intern",
+  "Software Craftsperson",
+  "Software Craftsperson - Tech Lead",
+  "Engineering Manager"
+] as const;
+
 interface EmployeeFormProps {
   employee?: EmployeeFormData;
   onSuccess: () => void;
@@ -48,7 +55,7 @@ export function EmployeeForm({ employee, onSuccess, onCancel }: EmployeeFormProp
       last_name: "",
       email: "",
       hire_date: "",
-      designation: "",
+      designation: "Software Craftsperson",
       status: EmployeeStatus.ACTIVE
     }
   });
@@ -168,7 +175,7 @@ export function EmployeeForm({ employee, onSuccess, onCancel }: EmployeeFormProp
               <FormControl>
                 <Input 
                   {...field} 
-                  type="email"
+                  type="email" 
                   placeholder="Enter email" 
                   className="border-indigo-200 focus:border-indigo-500" 
                 />
@@ -204,13 +211,27 @@ export function EmployeeForm({ employee, onSuccess, onCancel }: EmployeeFormProp
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-indigo-700 font-medium">Designation</FormLabel>
-              <FormControl>
-                <Input 
-                  {...field} 
-                  placeholder="Enter designation" 
-                  className="border-indigo-200 focus:border-indigo-500" 
-                />
-              </FormControl>
+              <Select 
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger className="border-indigo-200 focus:border-indigo-500">
+                    <SelectValue placeholder="Select Designation" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-white">
+                  {DESIGNATIONS.map((designation) => (
+                    <SelectItem 
+                      key={designation} 
+                      value={designation}
+                      className="hover:bg-indigo-50"
+                    >
+                      {designation}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage className="text-rose-500" />
             </FormItem>
           )}
