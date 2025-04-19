@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ClientStatus } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +6,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface Client {
   id: string;
@@ -61,39 +61,72 @@ export function ClientList({ onEdit }: { onEdit: (client: Client) => void }) {
     }
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-pulse text-muted-foreground">Loading...</div>
+    </div>
+  );
+
+  const getStatusColor = (status: ClientStatus) => {
+    switch (status) {
+      case ClientStatus.ACTIVE:
+        return "bg-green-500/15 text-green-700 hover:bg-green-500/25";
+      case ClientStatus.INACTIVE:
+        return "bg-gray-500/15 text-gray-700 hover:bg-gray-500/25";
+      default:
+        return "bg-gray-500/15 text-gray-700 hover:bg-gray-500/25";
+    }
+  };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Contract Start</TableHead>
-          <TableHead>Contract End</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {clients?.map((client) => (
-          <TableRow key={client.id}>
-            <TableCell>{client.name}</TableCell>
-            <TableCell>{client.contact_email}</TableCell>
-            <TableCell>{new Date(client.contract_start_date).toLocaleDateString()}</TableCell>
-            <TableCell>{new Date(client.contract_end_date).toLocaleDateString()}</TableCell>
-            <TableCell>{client.status}</TableCell>
-            <TableCell className="space-x-2">
-              <Button variant="outline" size="icon" onClick={() => onEdit(client)}>
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => handleDelete(client.id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </TableCell>
+    <div className="rounded-lg border bg-card">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/50">
+            <TableHead className="font-semibold">Name</TableHead>
+            <TableHead className="font-semibold">Email</TableHead>
+            <TableHead className="font-semibold">Contract Start</TableHead>
+            <TableHead className="font-semibold">Contract End</TableHead>
+            <TableHead className="font-semibold">Status</TableHead>
+            <TableHead className="font-semibold text-right">Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {clients?.map((client) => (
+            <TableRow key={client.id} className="hover:bg-muted/50 transition-colors">
+              <TableCell className="font-medium">{client.name}</TableCell>
+              <TableCell>{client.contact_email}</TableCell>
+              <TableCell>{new Date(client.contract_start_date).toLocaleDateString()}</TableCell>
+              <TableCell>{new Date(client.contract_end_date).toLocaleDateString()}</TableCell>
+              <TableCell>
+                <Badge className={`${getStatusColor(client.status)}`}>
+                  {client.status}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onEdit(client)}
+                    className="hover:bg-blue-500/15 hover:text-blue-700 transition-colors"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleDelete(client.id)}
+                    className="hover:bg-red-500/15 hover:text-red-700 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
