@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,10 +10,9 @@ import { InvoiceDetailsCard } from "@/components/invoice/InvoiceDetailsCard";
 import { ClientCard } from "@/components/invoice/ClientCard";
 import { BillingPeriodCard } from "@/components/invoice/BillingPeriodCard";
 import { InvoiceLineItemsTable } from "@/components/invoice/InvoiceLineItemsTable";
-import { isPast, format } from "date-fns";
+import { isPast } from "date-fns";
 import { PaymentDialog } from "@/components/invoice/PaymentDialog";
 import { useState } from "react";
-import { sendInvoiceEmail } from "@/utils/emailService";
 
 const transformInvoiceData = (data: any): Invoice => {
   return {
@@ -124,17 +122,9 @@ const InvoiceView = () => {
   };
 
   const sendInvoiceToClient = async () => {
-    if (!invoice || !rawInvoiceData?.clients) return;
+    if (!invoice) return;
 
     try {
-      await sendInvoiceEmail({
-        to_email: rawInvoiceData.clients.contact_email,
-        to_name: rawInvoiceData.clients.name,
-        invoice_number: invoice.invoiceNumber,
-        invoice_amount: `${invoice.currency} ${invoice.totalAmount.toFixed(2)}`,
-        due_date: format(invoice.dueDate, "MMM dd, yyyy")
-      });
-
       const { error } = await supabase
         .from('invoices')
         .update({ status: InvoiceStatus.SENT })
@@ -150,7 +140,7 @@ const InvoiceView = () => {
       await refetchInvoice();
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
     } catch (error) {
-      console.error("Error sending invoice:", error);
+      console.error("Error updating invoice status:", error);
       toast({
         variant: "destructive",
         title: "Error",
