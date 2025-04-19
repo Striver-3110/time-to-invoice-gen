@@ -1,18 +1,16 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MoreVertical, Eye, FileDown, Banknote } from "lucide-react";
+import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, isPast } from "date-fns";
 import { InvoiceStatus } from "@/lib/types";
 import { InvoiceStatusBadge } from "@/components/invoice/InvoiceStatusBadge";
 import { PaymentDialog } from "@/components/invoice/PaymentDialog";
 import { toast } from "@/components/ui/sonner";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const Invoices = () => {
   const queryClient = useQueryClient();
@@ -124,25 +122,11 @@ const Invoices = () => {
                           onPaymentSubmit={(date) => handleMarkAsPaid(invoice.invoice_id, date)}
                         />
                       )}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <Link to={`/invoices/${invoice.invoice_id}`}>
-                            <DropdownMenuItem>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View
-                            </DropdownMenuItem>
-                          </Link>
-                          <DropdownMenuItem>
-                            <FileDown className="h-4 w-4 mr-2" />
-                            Download PDF
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Link to={`/invoices/${invoice.invoice_id}`}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
                     </div>
                   </TableCell>
                 </TableRow>
