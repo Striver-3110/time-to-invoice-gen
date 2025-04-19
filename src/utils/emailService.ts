@@ -18,7 +18,7 @@ export const sendInvoiceEmail = async (params: SendInvoiceEmailParams) => {
       params as Record<string, unknown>,
       {
         publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
-        privateKey: import.meta.env.VITE_EMAILJS_PRIVATE_KEY,
+        // Remove privateKey as it's not supported in the EmailJS Options type
       }
     );
     
