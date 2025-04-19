@@ -28,7 +28,14 @@ export function ClientList({ onEdit }: { onEdit: (client: Client) => void }) {
         .select('*')
         .order('name');
       
-      if (error) throw error;
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not fetch clients"
+        });
+        throw error;
+      }
       return data as Client[];
     }
   });
