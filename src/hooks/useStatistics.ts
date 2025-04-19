@@ -16,28 +16,28 @@ export const useStatistics = () => {
     queryKey: ["statistics"],
     queryFn: async (): Promise<Statistics> => {
       const [
-        { count: totalProjects }, 
-        { count: totalEmployees }, 
-        { count: totalClients },
-        { count: activeProjects },
-        { count: activeEmployees },
-        { count: activeClients },
+        totalProjectsResponse, 
+        totalEmployeesResponse, 
+        totalClientsResponse,
+        activeProjectsResponse,
+        activeEmployeesResponse,
+        activeClientsResponse,
       ] = await Promise.all([
-        supabase.from("projects").count(),
-        supabase.from("employees").count(),
-        supabase.from("clients").count(),
-        supabase.from("projects").count().eq("status", "ACTIVE"),
-        supabase.from("employees").count().eq("status", "ACTIVE"),
-        supabase.from("clients").count().eq("status", "ACTIVE"),
+        supabase.from("projects").select('*', { count: 'exact', head: true }),
+        supabase.from("employees").select('*', { count: 'exact', head: true }),
+        supabase.from("clients").select('*', { count: 'exact', head: true }),
+        supabase.from("projects").select('*', { count: 'exact', head: true }).eq("status", "ACTIVE"),
+        supabase.from("employees").select('*', { count: 'exact', head: true }).eq("status", "ACTIVE"),
+        supabase.from("clients").select('*', { count: 'exact', head: true }).eq("status", "ACTIVE"),
       ]);
 
       return {
-        totalProjects: totalProjects || 0,
-        totalEmployees: totalEmployees || 0,
-        totalClients: totalClients || 0,
-        activeProjects: activeProjects || 0,
-        activeEmployees: activeEmployees || 0,
-        activeClients: activeClients || 0,
+        totalProjects: totalProjectsResponse.count || 0,
+        totalEmployees: totalEmployeesResponse.count || 0,
+        totalClients: totalClientsResponse.count || 0,
+        activeProjects: activeProjectsResponse.count || 0,
+        activeEmployees: activeEmployeesResponse.count || 0,
+        activeClients: activeClientsResponse.count || 0,
       };
     },
   });

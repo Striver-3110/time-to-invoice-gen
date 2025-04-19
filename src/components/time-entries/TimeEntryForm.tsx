@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +42,11 @@ interface TimeEntryFormProps {
   onCancel: () => void;
 }
 
+interface AvailableProject {
+  id: string;
+  project_name: string;
+}
+
 export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -76,7 +81,6 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
       const { data, error } = await supabase
         .from('assignments')
         .select(`
-          project_id,
           project:projects(
             id,
             project_name
@@ -86,7 +90,9 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
         .eq('status', 'ACTIVE');
 
       if (error) throw error;
-      return data.map(assignment => assignment.project);
+      
+      // Extract the projects from the nested structure
+      return data.map(assignment => assignment.project) as AvailableProject[];
     },
     enabled: !!form.watch('employee_id')
   });
@@ -174,7 +180,7 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {availableProjects.map((project: any) => (
+                  {availableProjects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.project_name}
                     </SelectItem>
