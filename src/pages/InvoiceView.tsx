@@ -12,6 +12,7 @@ import { BillingPeriodCard } from "@/components/invoice/BillingPeriodCard";
 import { InvoiceLineItemsTable } from "@/components/invoice/InvoiceLineItemsTable";
 import { isPast } from "date-fns";
 import { PaymentDialog } from "@/components/invoice/PaymentDialog";
+import { useState } from "react";
 
 const transformInvoiceData = (data: any): Invoice => {
   return {
@@ -47,6 +48,7 @@ const InvoiceView = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const { 
     data: rawInvoiceData, 
@@ -185,13 +187,21 @@ const InvoiceView = () => {
   const handleDownloadPDF = async () => {
     if (invoice && lineItems) {
       try {
-        await generateInvoicePDF(invoice, transformLineItemData(lineItems));
+        setIsGeneratingPdf(true);
+        await generateInvoicePDF(rawInvoiceData, lineItemsRaw);
+        toast({
+          title: "Success",
+          description: "PDF has been generated and downloaded",
+        });
       } catch (error) {
+        console.error("Error generating PDF:", error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to generate PDF"
+          description: "Failed to generate PDF. Please try again."
         });
+      } finally {
+        setIsGeneratingPdf(false);
       }
     }
   };
@@ -222,9 +232,22 @@ const InvoiceView = () => {
           <h1 className="text-2xl font-bold text-primary">Invoice #{invoice.invoiceNumber}</h1>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleDownloadPDF}>
-            <Download className="h-4 w-4 mr-2" />
-            Download PDF
+          <Button 
+            variant="outline" 
+            onClick={handleDownloadPDF} 
+            disabled={isGeneratingPdf}
+          >
+            {isGeneratingPdf ? (
+              <>
+                <span className="animate-spin mr-2">◌</span>
+                Generating...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </>
+            )}
           </Button>
           {invoice.status === InvoiceStatus.DRAFT && (
             <Button onClick={sendInvoiceToClient}>

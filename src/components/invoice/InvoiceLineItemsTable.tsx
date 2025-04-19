@@ -30,8 +30,8 @@ export const InvoiceLineItemsTable = ({
   totalAmount 
 }: InvoiceLineItemsTableProps) => {
   return (
-    <Card>
-      <CardHeader>
+    <Card className="overflow-hidden">
+      <CardHeader className="bg-muted/30">
         <CardTitle className="text-primary">Invoice Line Items</CardTitle>
       </CardHeader>
       <CardContent>
@@ -42,25 +42,30 @@ export const InvoiceLineItemsTable = ({
               <TableHead>Project</TableHead>
               <TableHead>Employee</TableHead>
               <TableHead>Quantity</TableHead>
+              <TableHead>Rate</TableHead>
               <TableHead className="text-right">Amount</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {lineItems.map((item) => (
-              <TableRow key={item.line_item_id}>
-                <TableCell>{item.service_description}</TableCell>
-                <TableCell>{item.projects?.project_name}</TableCell>
-                <TableCell>{item.employees?.designation}</TableCell>
-                <TableCell>{item.quantity} hours</TableCell>
-                <TableCell className="text-right font-medium">
-                  {currency} {item.total_amount.toFixed(2)}
-                </TableCell>
-              </TableRow>
-            ))}
+            {lineItems.map((item) => {
+              const rate = item.total_amount / item.quantity;
+              return (
+                <TableRow key={item.line_item_id}>
+                  <TableCell>{item.service_description}</TableCell>
+                  <TableCell>{item.projects?.project_name || '-'}</TableCell>
+                  <TableCell>{item.employees?.designation || '-'}</TableCell>
+                  <TableCell>{item.quantity} hours</TableCell>
+                  <TableCell>{currency} {rate.toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-medium">
+                    {currency} {item.total_amount.toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </CardContent>
-      <CardFooter className="flex justify-end border-t p-4">
+      <CardFooter className="flex justify-end border-t p-4 bg-muted/20">
         <div className="text-right">
           <div className="flex justify-between w-64">
             <span className="font-semibold text-secondary-700">Total Amount:</span>
