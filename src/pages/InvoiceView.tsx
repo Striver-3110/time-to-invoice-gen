@@ -10,6 +10,7 @@ import { InvoiceDetailsCard } from "@/components/invoice/InvoiceDetailsCard";
 import { ClientCard } from "@/components/invoice/ClientCard";
 import { BillingPeriodCard } from "@/components/invoice/BillingPeriodCard";
 import { InvoiceLineItemsTable } from "@/components/invoice/InvoiceLineItemsTable";
+import { isPast } from "date-fns";
 
 const transformInvoiceData = (data: any): Invoice => {
   return {
@@ -53,7 +54,8 @@ const InvoiceView = () => {
   } = useQuery({
     queryKey: ['invoice', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First, fetch the invoice data
+      const { data: invoice, error: fetchError } = await supabase
         .from('invoices')
         .select(`
           *,
@@ -65,16 +67,27 @@ const InvoiceView = () => {
         .eq('invoice_id', id)
         .single();
 
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Could not fetch invoice details"
-        });
-        throw error;
+      if (fetchError) throw fetchError;
+
+      // Check if invoice is overdue and update status if needed
+      if (invoice.status === InvoiceStatus.SENT && 
+          isPast(new Date(invoice.due_date)) && 
+          !invoice.payment_date) {
+        const { error: updateError } = await supabase
+          .from('invoices')
+          .update({ status: InvoiceStatus.OVERDUE })
+          .eq('invoice_id', id);
+
+        if (updateError) throw updateError;
+        
+        // Return updated invoice data
+        return {
+          ...invoice,
+          status: InvoiceStatus.OVERDUE
+        };
       }
 
-      return data;
+      return invoice;
     },
     enabled: !!id
   });
