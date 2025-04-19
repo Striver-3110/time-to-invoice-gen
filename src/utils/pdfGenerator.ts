@@ -6,9 +6,13 @@ export const generateInvoicePDF = async (invoice: any, lineItems: any[]) => {
   // Create the HTML content with proper styling
   const content = `
     <div id="invoice-pdf" style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
-      <div style="text-align: center; padding: 20px 0;">
-        <h1 style="color: #4f46e5; margin: 0;">INVOICE</h1>
-        <p style="color: #666; margin: 5px 0;">#${invoice.invoice_number || invoice.invoiceNumber}</p>
+      <div style="text-align: center; padding: 20px 0; display: flex; justify-content: space-between; align-items: center;">
+        <img src="/public/lovable-uploads/691a1439-bd85-47ea-9b1b-9fcaee1da51c.png" alt="Incubyte Logo" style="height: 60px; object-fit: contain;" />
+        <div>
+          <h1 style="color: #4f46e5; margin: 0;">INVOICE</h1>
+          <p style="color: #666; margin: 5px 0;">#${invoice.invoice_number || invoice.invoiceNumber}</p>
+        </div>
+        <div style="width: 60px;"></div>
       </div>
       
       <div style="padding: 20px;">
@@ -98,14 +102,12 @@ export const generateInvoicePDF = async (invoice: any, lineItems: any[]) => {
   document.body.appendChild(element);
 
   try {
-    // Make sure the PDF is generated before removing the element
     const pdf = await html2pdf().from(element).set(opt).save();
     return pdf;
   } catch (error) {
     console.error("Error generating PDF:", error);
     throw error;
   } finally {
-    // Clean up the temporary element
     document.body.removeChild(element);
   }
 };
