@@ -11,6 +11,7 @@ import { ClientCard } from "@/components/invoice/ClientCard";
 import { BillingPeriodCard } from "@/components/invoice/BillingPeriodCard";
 import { InvoiceLineItemsTable } from "@/components/invoice/InvoiceLineItemsTable";
 import { isPast } from "date-fns";
+import { PaymentDialog } from "@/components/invoice/PaymentDialog";
 
 const transformInvoiceData = (data: any): Invoice => {
   return {
@@ -88,6 +89,35 @@ const InvoiceView = () => {
     },
     enabled: !!id
   });
+
+  const handleMarkAsPaid = async (invoiceId: string, paymentDate: Date) => {
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ 
+          status: InvoiceStatus.PAID,
+          payment_date: paymentDate.toISOString()
+        })
+        .eq('invoice_id', invoiceId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Invoice has been marked as paid",
+      });
+
+      await refetchInvoice();
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    } catch (error) {
+      console.error("Error marking invoice as paid:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to mark invoice as paid",
+      });
+    }
+  };
 
   const { data: lineItemsRaw = [], isLoading: isLoadingItems } = useQuery({
     queryKey: ['invoice-line-items', id],
