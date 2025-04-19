@@ -89,7 +89,7 @@ export function TimeEntryList({
               <TableHead className="font-semibold text-purple-600">Employee</TableHead>
               <TableHead className="font-semibold text-blue-500">Project</TableHead>
               <TableHead className="font-semibold text-purple-600">Date</TableHead>
-              <TableHead className="font-semibold text-green-500">Hours</TableHead>
+              <TableHead className="font-semibold text-purple-600">Hours</TableHead>
               <TableHead className="font-semibold text-right text-purple-600">Actions</TableHead>
             </TableRow>
           </TableHeader>
