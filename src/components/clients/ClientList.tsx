@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+
 interface Client {
   id: string;
   name: string;
@@ -15,6 +16,7 @@ interface Client {
   contract_end_date: string;
   status: ClientStatus;
 }
+
 export function ClientList({
   onEdit
 }: {
@@ -45,6 +47,7 @@ export function ClientList({
       return data as Client[];
     }
   });
+
   const handleDelete = async (id: string) => {
     const {
       error
@@ -63,9 +66,11 @@ export function ClientList({
       refetch();
     }
   };
+
   if (isLoading) return <div className="flex items-center justify-center h-64">
       <div className="animate-pulse text-muted-foreground">Loading...</div>
     </div>;
+
   const getStatusColor = (status: ClientStatus) => {
     switch (status) {
       case ClientStatus.ACTIVE:
@@ -76,6 +81,7 @@ export function ClientList({
         return "bg-gray-500/15 text-gray-700 hover:bg-gray-500/25";
     }
   };
+
   return <div className="rounded-lg border bg-card">
       <Table>
         <TableHeader>
@@ -100,11 +106,21 @@ export function ClientList({
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Button variant="outline" size="icon" onClick={() => onEdit(client)} className="text-emerald-600 hover:text-emerald-700 transition-colors duration-200 ease-in-out transform hover:scale-105 bg-emerald-600 hover:bg-emerald-500">
+                <div className="flex justify-end gap-2 opacity-100 group-hover:opacity-100 transition-opacity duration-300">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => onEdit(client)} 
+                    className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleDelete(client.id)} className="bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 transition-colors duration-200 ease-in-out transform hover:scale-105">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => handleDelete(client.id)} 
+                    className="text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
