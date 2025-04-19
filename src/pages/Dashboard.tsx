@@ -1,9 +1,47 @@
 
+import { Briefcase, Users, UserRound } from "lucide-react";
+import { useStatistics } from "@/hooks/useStatistics";
+import { StatsCard } from "@/components/dashboard/StatsCard";
+
 const Dashboard = () => {
+  const { data: stats, isLoading } = useStatistics();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <p className="text-muted-foreground">Loading statistics...</p>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-      <p className="text-gray-600">Welcome to the Invoice Generation System dashboard.</p>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Dashboard</h1>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <StatsCard
+          title="Total Projects"
+          value={stats?.totalProjects || 0}
+          active={stats?.activeProjects}
+          icon={Briefcase}
+          color="text-purple-500"
+        />
+        <StatsCard
+          title="Total Employees"
+          value={stats?.totalEmployees || 0}
+          active={stats?.activeEmployees}
+          icon={Users}
+          color="text-orange-500"
+        />
+        <StatsCard
+          title="Total Clients"
+          value={stats?.totalClients || 0}
+          active={stats?.activeClients}
+          icon={UserRound}
+          color="text-green-500"
+        />
+      </div>
     </div>
   );
 };
