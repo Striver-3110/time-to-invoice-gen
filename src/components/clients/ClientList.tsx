@@ -7,6 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Client {
   id: string;
@@ -22,9 +32,9 @@ export function ClientList({
 }: {
   onEdit: (client: Client) => void;
 }) {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const [clientToDelete, setClientToDelete] = useState<string | null>(null);
+
   const {
     data: clients,
     isLoading,
@@ -32,10 +42,7 @@ export function ClientList({
   } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('clients').select('*').order('name');
+      const { data, error } = await supabase.from('clients').select('*').order('name');
       if (error) {
         toast({
           variant: "destructive",
@@ -49,22 +56,21 @@ export function ClientList({
   });
 
   const handleDelete = async (id: string) => {
-    const {
-      error
-    } = await supabase.from('clients').delete().eq('id', id);
+    const { error } = await supabase.from('clients').delete().eq('id', id);
     if (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not delete client"
+        description: "Could not delete"
       });
     } else {
       toast({
         title: "Success",
-        description: "Client deleted successfully"
+        description: "Deleted successfully"
       });
       refetch();
     }
+    setClientToDelete(null);
   };
 
   if (isLoading) return <div className="flex items-center justify-center h-64">
@@ -82,51 +88,77 @@ export function ClientList({
     }
   };
 
-  return <div className="rounded-lg border bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead className="font-semibold">Name</TableHead>
-            <TableHead className="font-semibold">Email</TableHead>
-            <TableHead className="font-semibold">Contract Start</TableHead>
-            <TableHead className="font-semibold">Contract End</TableHead>
-            <TableHead className="font-semibold">Status</TableHead>
-            <TableHead className="font-semibold text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {clients?.map(client => <TableRow key={client.id} className="hover:bg-muted/50 transition-colors group">
-              <TableCell className="font-medium">{client.name}</TableCell>
-              <TableCell>{client.contact_email}</TableCell>
-              <TableCell>{new Date(client.contract_start_date).toLocaleDateString()}</TableCell>
-              <TableCell>{new Date(client.contract_end_date).toLocaleDateString()}</TableCell>
-              <TableCell>
-                <Badge className={`${getStatusColor(client.status)}`}>
-                  {client.status}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2 opacity-100 group-hover:opacity-100 transition-opacity duration-300">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={() => onEdit(client)} 
-                    className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={() => handleDelete(client.id)} 
-                    className="text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>)}
-        </TableBody>
-      </Table>
-    </div>;
+  return (
+    <>
+      <div className="rounded-lg border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="font-semibold">Name</TableHead>
+              <TableHead className="font-semibold">Email</TableHead>
+              <TableHead className="font-semibold">Contract Start</TableHead>
+              <TableHead className="font-semibold">Contract End</TableHead>
+              <TableHead className="font-semibold">Status</TableHead>
+              <TableHead className="font-semibold text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {clients?.map(client => (
+              <TableRow key={client.id} className="hover:bg-muted/50 transition-colors group">
+                <TableCell className="font-medium">{client.name}</TableCell>
+                <TableCell>{client.contact_email}</TableCell>
+                <TableCell>{new Date(client.contract_start_date).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(client.contract_end_date).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  <Badge className={`${getStatusColor(client.status)}`}>
+                    {client.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => onEdit(client)} 
+                      className="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => setClientToDelete(client.id)} 
+                      className="text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <AlertDialog open={!!clientToDelete} onOpenChange={() => setClientToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the selected entry.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => clientToDelete && handleDelete(clientToDelete)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 }
