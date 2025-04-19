@@ -54,7 +54,6 @@ const InvoiceView = () => {
   } = useQuery({
     queryKey: ['invoice', id],
     queryFn: async () => {
-      // First, fetch the invoice data
       const { data: invoice, error: fetchError } = await supabase
         .from('invoices')
         .select(`
@@ -69,7 +68,6 @@ const InvoiceView = () => {
 
       if (fetchError) throw fetchError;
 
-      // Check if invoice is overdue and update status if needed
       if (invoice.status === InvoiceStatus.SENT && 
           isPast(new Date(invoice.due_date)) && 
           !invoice.payment_date) {
@@ -80,7 +78,6 @@ const InvoiceView = () => {
 
         if (updateError) throw updateError;
         
-        // Return updated invoice data
         return {
           ...invoice,
           status: InvoiceStatus.OVERDUE
@@ -199,7 +196,7 @@ const InvoiceView = () => {
             <Download className="h-4 w-4 mr-2" />
             Download PDF
           </Button>
-          {invoice.status === InvoiceStatus.DRAFT && (
+          {invoice.status === InvoiceStatus.SENT && (
             <Button onClick={sendInvoiceToClient}>
               <Send className="h-4 w-4 mr-2" />
               Send to Client
@@ -218,6 +215,16 @@ const InvoiceView = () => {
           startDate={invoice.billingPeriodStart.toISOString()} 
           endDate={invoice.billingPeriodEnd.toISOString()} 
         />
+      </div>
+
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold text-primary">Line Items</h2>
+        {(invoice.status === InvoiceStatus.SENT || invoice.status === InvoiceStatus.OVERDUE) && (
+          <PaymentDialog
+            invoiceId={invoice.id}
+            onPaymentSubmit={(date) => handleMarkAsPaid(invoice.id, date)}
+          />
+        )}
       </div>
 
       <InvoiceLineItemsTable 
