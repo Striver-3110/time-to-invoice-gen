@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, addDays } from "date-fns";
@@ -63,16 +62,12 @@ interface TimeEntry {
 interface ProjectTimesheet {
   projectId: string;
   projectName: string;
-  employees: EmployeeTimesheet[];
-}
-
-interface EmployeeTimesheet {
-  employeeId: string;
-  name: string;
-  designation: string;
-  hours: number;
-  rate: number;
-  amount: number;
+  employees: {
+    designation: string;
+    hours: number;
+    rate: number;
+    amount: number;
+  }[];
 }
 
 const ClientInvoiceGenerate = () => {
@@ -137,13 +132,11 @@ const ClientInvoiceGenerate = () => {
     if (!projects || !billingStart || !billingEnd) return;
     
     const generateTimesheets = async () => {
-      // Format dates for querying
       const startDate = format(billingStart, 'yyyy-MM-dd');
       const endDate = format(billingEnd, 'yyyy-MM-dd');
       
       // Create a timesheet for each project
       const timesheetsPromises = projects.map(async (project) => {
-        // Get time entries for this project within date range
         const { data: timeEntries, error } = await supabase
           .from('time_entries')
           .select(`
@@ -152,7 +145,7 @@ const ClientInvoiceGenerate = () => {
             project_id, 
             date, 
             hours,
-            employees(id, first_name, last_name, designation, status, email)
+            employees(id, designation)
           `)
           .eq('project_id', project.id)
           .gte('date', startDate)
@@ -175,42 +168,45 @@ const ClientInvoiceGenerate = () => {
           };
         }
         
-        // Group time entries by employee
-        const employeeMap = new Map<string, EmployeeTimesheet>();
+        // Group time entries by designation
+        const designationMap = new Map<string, {
+          hours: number;
+          rate: number;
+          amount: number;
+        }>();
         
         timeEntries.forEach((entry: any) => {
-          const employeeId = entry.employee_id;
-          const employee = entry.employees;
+          const designation = entry.employees.designation;
           const hours = entry.hours;
+          // Standard rate of $75 per hour
+          const hourlyRate = 75;
           
-          if (!employeeMap.has(employeeId)) {
-            // Standard rate of $75 per hour
-            const hourlyRate = 75;
-            
-            employeeMap.set(employeeId, {
-              employeeId,
-              name: `${employee.first_name} ${employee.last_name}`,
-              designation: employee.designation,
+          if (!designationMap.has(designation)) {
+            designationMap.set(designation, {
               hours,
               rate: hourlyRate,
               amount: hours * hourlyRate
             });
           } else {
-            const existingEmployee = employeeMap.get(employeeId)!;
-            existingEmployee.hours += hours;
-            existingEmployee.amount = existingEmployee.hours * existingEmployee.rate;
-            employeeMap.set(employeeId, existingEmployee);
+            const existing = designationMap.get(designation)!;
+            existing.hours += hours;
+            existing.amount = existing.hours * existing.rate;
+            designationMap.set(designation, existing);
           }
         });
         
         return {
           projectId: project.id,
           projectName: project.project_name,
-          employees: Array.from(employeeMap.values())
+          employees: Array.from(designationMap.entries()).map(([designation, data]) => ({
+            designation,
+            hours: data.hours,
+            rate: data.rate,
+            amount: data.amount
+          }))
         };
       });
       
-      // Wait for all timesheets to be generated
       const results = await Promise.all(timesheetsPromises);
       const validTimesheets = results.filter((timesheet): timesheet is ProjectTimesheet => 
         timesheet !== null && timesheet.employees.length > 0
@@ -264,21 +260,19 @@ const ClientInvoiceGenerate = () => {
       if (invoiceError) throw new Error(invoiceError.message);
       
       // Create invoice line items
-      const lineItems = projectTimesheets.flatMap(project => 
+      const lineItemsPromises = projectTimesheets.flatMap(project =>
         project.employees.map(employee => ({
           invoice_id: invoice.id,
           project_id: project.projectId,
-          employee_id: employee.employeeId,
           service_description: `${employee.designation} services - ${project.projectName}`,
           quantity: employee.hours,
-          rate: employee.rate,
           total_amount: employee.amount
         }))
       );
       
       const { error: lineItemsError } = await supabase
         .from('invoice_line_items')
-        .insert(lineItems);
+        .insert(lineItemsPromises);
       
       if (lineItemsError) throw new Error(lineItemsError.message);
       
@@ -441,7 +435,6 @@ const ClientInvoiceGenerate = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Employee</TableHead>
                       <TableHead>Designation</TableHead>
                       <TableHead>Hours</TableHead>
                       <TableHead>Rate</TableHead>
@@ -449,9 +442,8 @@ const ClientInvoiceGenerate = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {project.employees.map((employee) => (
-                      <TableRow key={employee.employeeId}>
-                        <TableCell>{employee.name}</TableCell>
+                    {project.employees.map((employee, idx) => (
+                      <TableRow key={`${project.projectId}-${employee.designation}-${idx}`}>
                         <TableCell>{employee.designation}</TableCell>
                         <TableCell>{employee.hours}</TableCell>
                         <TableCell>${employee.rate.toFixed(2)}</TableCell>
