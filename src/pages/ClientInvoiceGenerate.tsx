@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { addDays } from "date-fns";
@@ -22,6 +21,7 @@ const ClientInvoiceGenerate = () => {
   const [billingStart, setBillingStart] = useState<Date>(new Date(new Date().setDate(1)));
   const [billingEnd, setBillingEnd] = useState<Date>(new Date());
   const [dueDate, setDueDate] = useState<Date>(addDays(new Date(), 15));
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
   const { projectTimesheets, totalAmount, assignmentMap } = useInvoiceGeneration(
     clientId,
@@ -61,6 +61,12 @@ const ClientInvoiceGenerate = () => {
       return;
     }
     
+    if (isSubmitting) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
     try {
       const invoiceNumber = `${new Date().toISOString().slice(0, 10)}-${clientId?.substring(0, 8)}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
       
@@ -87,7 +93,7 @@ const ClientInvoiceGenerate = () => {
           invoice_id: invoice.invoice_id,
           project_id: project.projectId,
           assignment_id: assignmentMap[project.projectId]?.[employee.designation],
-          employee_id: null, // This will be set by the foreign key constraint
+          employee_id: null,
           service_description: `${employee.designation} services - ${project.projectName}`,
           quantity: employee.hours,
           total_amount: employee.amount
@@ -113,6 +119,8 @@ const ClientInvoiceGenerate = () => {
         title: "Error creating invoice",
         description: error.message
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -203,11 +211,11 @@ const ClientInvoiceGenerate = () => {
         </Button>
         <Button 
           onClick={handleGenerateInvoice} 
-          disabled={projectTimesheets.length === 0}
+          disabled={projectTimesheets.length === 0 || isSubmitting}
           className="bg-primary hover:bg-primary/90"
         >
           <Save className="h-4 w-4 mr-2" />
-          Generate Invoice
+          {isSubmitting ? 'Generating...' : 'Generate Invoice'}
         </Button>
       </div>
     </div>
