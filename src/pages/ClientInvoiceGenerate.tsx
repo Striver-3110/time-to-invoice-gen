@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { addDays } from "date-fns";
@@ -23,7 +24,7 @@ const ClientInvoiceGenerate = () => {
   const [dueDate, setDueDate] = useState<Date>(addDays(new Date(), 15));
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
-  const { projectTimesheets, totalAmount, assignmentMap } = useInvoiceGeneration(
+  const { projectTimesheets, totalAmount, assignmentMap, employeeMap } = useInvoiceGeneration(
     clientId,
     billingStart,
     billingEnd
@@ -70,6 +71,7 @@ const ClientInvoiceGenerate = () => {
     try {
       const invoiceNumber = `${new Date().toISOString().slice(0, 10)}-${clientId?.substring(0, 8)}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
       
+      // First create the invoice
       const { data: invoice, error: invoiceError } = await supabase
         .from('invoices')
         .insert({
@@ -88,29 +90,42 @@ const ClientInvoiceGenerate = () => {
       
       if (invoiceError) throw new Error(invoiceError.message);
       
+      // Create line items for each project and employee
       const lineItems = projectTimesheets.flatMap(project => 
-        project.employees.map(employee => ({
-          invoice_id: invoice.invoice_id,
-          project_id: project.projectId,
-          assignment_id: assignmentMap[project.projectId]?.[employee.designation],
-          employee_id: null,
-          service_description: `${employee.designation} services - ${project.projectName}`,
-          quantity: employee.hours,
-          total_amount: employee.amount
-        }))
+        project.employees.map(employee => {
+          // Get employee ID from the designation
+          const employeeId = employeeMap[employee.designation];
+          
+          if (!employeeId) {
+            throw new Error(`Employee with designation ${employee.designation} not found.`);
+          }
+          
+          return {
+            invoice_id: invoice.invoice_id,
+            project_id: project.projectId,
+            assignment_id: assignmentMap[project.projectId]?.[employee.designation],
+            employee_id: employeeId, // Using actual employee ID instead of null
+            service_description: `${employee.designation} services - ${project.projectName}`,
+            quantity: employee.hours,
+            total_amount: employee.amount
+          };
+        })
       );
       
+      // Insert all line items
       const { error: lineItemsError } = await supabase
         .from('invoice_line_items')
         .insert(lineItems);
       
       if (lineItemsError) throw new Error(lineItemsError.message);
       
+      // Show success message
       toast({
         title: "Invoice Created",
         description: `Invoice #${invoiceNumber} has been created.`
       });
       
+      // Navigate to the invoice view
       navigate(`/invoices/${invoice.invoice_id}`);
       
     } catch (error: any) {

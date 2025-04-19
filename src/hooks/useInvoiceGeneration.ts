@@ -11,6 +11,7 @@ export const useInvoiceGeneration = (clientId: string | undefined, billingStart:
   const [projectTimesheets, setProjectTimesheets] = useState<ProjectTimesheet[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [assignmentMap, setAssignmentMap] = useState<Record<string, Record<string, string>>>({});
+  const [employeeMap, setEmployeeMap] = useState<Record<string, string>>({});
 
   // Fetch client projects
   const { data: projects } = useQuery({
@@ -33,6 +34,35 @@ export const useInvoiceGeneration = (clientId: string | undefined, billingStart:
       return data;
     },
     enabled: !!clientId
+  });
+
+  // Fetch employees to map designations to IDs
+  useQuery({
+    queryKey: ['employees-for-invoice'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('id, designation')
+        .eq('status', 'ACTIVE');
+        
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not fetch employees"
+        });
+        throw error;
+      }
+      
+      // Create a map of designation to employee ID
+      const employeeDesignationMap: Record<string, string> = {};
+      data.forEach((employee: any) => {
+        employeeDesignationMap[employee.designation] = employee.id;
+      });
+      
+      setEmployeeMap(employeeDesignationMap);
+      return data;
+    },
   });
 
   // Fetch assignments
@@ -179,6 +209,7 @@ export const useInvoiceGeneration = (clientId: string | undefined, billingStart:
   return {
     projectTimesheets,
     totalAmount,
-    assignmentMap
+    assignmentMap,
+    employeeMap
   };
 };
