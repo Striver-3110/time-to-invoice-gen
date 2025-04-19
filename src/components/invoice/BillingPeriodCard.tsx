@@ -11,16 +11,16 @@ export const BillingPeriodCard = ({ startDate, endDate }: BillingPeriodCardProps
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Billing Period</CardTitle>
+        <CardTitle className="text-primary">Billing Period</CardTitle>
       </CardHeader>
       <CardContent>
         <dl className="space-y-2">
           <div className="flex justify-between">
-            <dt className="font-medium">Start Date:</dt>
+            <dt className="font-medium text-secondary">Start Date:</dt>
             <dd>{format(new Date(startDate), "MMM dd, yyyy")}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="font-medium">End Date:</dt>
+            <dt className="font-medium text-secondary">End Date:</dt>
             <dd>{format(new Date(endDate), "MMM dd, yyyy")}</dd>
           </div>
         </dl>

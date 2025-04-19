@@ -4,13 +4,43 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Send } from "lucide-react";
-import { InvoiceStatus } from "@/lib/types";
+import { InvoiceStatus, type Invoice, type InvoiceLineItem } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { generateInvoicePDF } from "@/utils/pdfGenerator";
 import { InvoiceDetailsCard } from "@/components/invoice/InvoiceDetailsCard";
 import { ClientCard } from "@/components/invoice/ClientCard";
 import { BillingPeriodCard } from "@/components/invoice/BillingPeriodCard";
 import { InvoiceLineItemsTable } from "@/components/invoice/InvoiceLineItemsTable";
+
+// Helper function to transform data from Supabase format to our application's types
+const transformInvoiceData = (data: any): Invoice => {
+  return {
+    id: data.invoice_id,
+    clientId: data.client_id,
+    invoiceNumber: data.invoice_number,
+    invoiceDate: new Date(data.invoice_date),
+    dueDate: new Date(data.due_date),
+    paymentDate: data.payment_date ? new Date(data.payment_date) : undefined,
+    totalAmount: data.total_amount,
+    currency: data.currency,
+    status: data.status as InvoiceStatus,
+    billingPeriodStart: new Date(data.billing_period_start),
+    billingPeriodEnd: new Date(data.billing_period_end),
+  };
+};
+
+const transformLineItemData = (data: any[]): InvoiceLineItem[] => {
+  return data.map(item => ({
+    id: item.line_item_id,
+    invoiceId: item.invoice_id,
+    assignmentId: item.assignment_id,
+    employeeId: item.employee_id,
+    projectId: item.project_id,
+    serviceDescription: item.service_description,
+    quantity: item.quantity,
+    totalAmount: item.total_amount,
+  }));
+};
 
 const InvoiceView = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,7 +49,7 @@ const InvoiceView = () => {
   const queryClient = useQueryClient();
 
   const { 
-    data: invoice, 
+    data: rawInvoiceData, 
     isLoading: isLoadingInvoice,
     refetch: refetchInvoice
   } = useQuery({
@@ -51,7 +81,7 @@ const InvoiceView = () => {
     enabled: !!id
   });
 
-  const { data: lineItems = [], isLoading: isLoadingItems } = useQuery({
+  const { data: lineItemsRaw = [], isLoading: isLoadingItems } = useQuery({
     queryKey: ['invoice-line-items', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -83,10 +113,14 @@ const InvoiceView = () => {
     enabled: !!id
   });
 
+  // Transform the data to match our application's types
+  const invoice = rawInvoiceData ? transformInvoiceData(rawInvoiceData) : null;
+  const lineItems = lineItemsRaw || [];
+
   const handleDownloadPDF = async () => {
     if (invoice && lineItems) {
       try {
-        await generateInvoicePDF(invoice, lineItems);
+        await generateInvoicePDF(invoice, transformLineItemData(lineItems));
       } catch (error) {
         toast({
           variant: "destructive",
@@ -101,10 +135,10 @@ const InvoiceView = () => {
     if (!invoice || !lineItems) return;
 
     try {
-      await generateInvoicePDF(invoice, lineItems);
+      await generateInvoicePDF(invoice, transformLineItemData(lineItems));
       
       const { data, error } = await supabase.functions.invoke('send-invoice', {
-        body: { invoice, lineItems },
+        body: { invoice, lineItems: transformLineItemData(lineItems) },
       });
 
       if (error) throw error;
@@ -149,7 +183,7 @@ const InvoiceView = () => {
           <Button variant="outline" size="icon" onClick={() => navigate(-1)} className="mr-4">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-2xl font-bold text-primary">Invoice #{invoice.invoice_number}</h1>
+          <h1 className="text-2xl font-bold text-primary">Invoice #{invoice.invoiceNumber}</h1>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleDownloadPDF}>
@@ -168,19 +202,19 @@ const InvoiceView = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <InvoiceDetailsCard invoice={invoice} />
         <ClientCard 
-          name={invoice.clients?.name || ''} 
-          email={invoice.clients?.contact_email || ''} 
+          name={rawInvoiceData?.clients?.name || ''} 
+          email={rawInvoiceData?.clients?.contact_email || ''} 
         />
         <BillingPeriodCard 
-          startDate={invoice.billing_period_start} 
-          endDate={invoice.billing_period_end} 
+          startDate={invoice.billingPeriodStart.toISOString()} 
+          endDate={invoice.billingPeriodEnd.toISOString()} 
         />
       </div>
 
       <InvoiceLineItemsTable 
-        lineItems={lineItems} 
+        lineItems={lineItemsRaw} 
         currency={invoice.currency} 
-        totalAmount={invoice.total_amount} 
+        totalAmount={invoice.totalAmount} 
       />
     </div>
   );

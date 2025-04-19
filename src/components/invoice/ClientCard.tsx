@@ -10,10 +10,10 @@ export const ClientCard = ({ name, email }: ClientCardProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Client</CardTitle>
+        <CardTitle className="text-primary">Client</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="font-semibold text-foreground">{name}</p>
+        <p className="font-semibold text-secondary">{name}</p>
         <p className="text-sm text-muted-foreground">{email}</p>
       </CardContent>
     </Card>
