@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
+import ClientInvoiceGenerate from "./pages/ClientInvoiceGenerate";
 import Projects from "./pages/Projects";
 import Employees from "./pages/Employees";
 import TimeEntries from "./pages/TimeEntries";
@@ -27,6 +29,7 @@ const App = () => (
           <Route element={<AppLayout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/clients" element={<Clients />} />
+            <Route path="/clients/:clientId/generate-invoice" element={<ClientInvoiceGenerate />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/time-entries" element={<TimeEntries />} />

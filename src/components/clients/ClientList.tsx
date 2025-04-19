@@ -1,12 +1,14 @@
+
 import { useState } from "react";
 import { ClientStatus } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +35,7 @@ export function ClientList({
   onEdit: (client: Client) => void;
 }) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);
 
   const {
@@ -71,6 +74,10 @@ export function ClientList({
       refetch();
     }
     setClientToDelete(null);
+  };
+
+  const handleGenerateInvoice = (client: Client) => {
+    navigate(`/clients/${client.id}/generate-invoice`);
   };
 
   if (isLoading) return <div className="flex items-center justify-center h-64">
@@ -131,6 +138,15 @@ export function ClientList({
                       className="text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
                     >
                       <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => handleGenerateInvoice(client)} 
+                      className="text-purple-600 hover:text-purple-700 bg-purple-50 hover:bg-purple-100 border-purple-200 transition-colors duration-200 ease-in-out transform hover:scale-105"
+                      title="Generate Invoice"
+                    >
+                      <FileText className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>

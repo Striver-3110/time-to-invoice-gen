@@ -103,14 +103,13 @@ export interface Invoice {
 export interface InvoiceLineItem {
   id: string;
   invoiceId: string;
-  assignmentId: string;
   employeeId: string;
   projectId: string;
   serviceDescription: string;
   quantity: number;
+  rate: number;
   totalAmount: number;
   invoice?: Invoice;
-  assignment?: Assignment;
   employee?: Employee;
   project?: Project;
 }
