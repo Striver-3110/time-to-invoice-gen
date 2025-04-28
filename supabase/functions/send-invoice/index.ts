@@ -1,9 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,67 +16,55 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { invoice, lineItems, recipientEmail } = await req.json();
 
-    // Override recipient email in test mode
-    const testEmail = "prajapatijay31100@gmail.com";
-    console.log(`Original recipient: ${recipientEmail}, using test email: ${testEmail} for development`);
-
-    // Create a nicely formatted line items HTML
-    const lineItemsHtml = lineItems.map((item: any) => `
-      <tr>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.service_description}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.quantity}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${item.total_amount.toFixed(2)}</td>
-      </tr>
-    `).join('');
-
     // Format dates for better readability
     const formatDate = (dateString: string) => {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     };
 
-    // Send email with invoice details
-    const emailResponse = await resend.emails.send({
-      from: "Invoicing System <onboarding@resend.dev>",
-      to: [testEmail], // Use the test email instead of recipientEmail
-      subject: `Invoice #${invoice.invoice_number}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-          <h1 style="color: #4338ca; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">Invoice #${invoice.invoice_number}</h1>
-          
-          <div style="margin: 20px 0;">
-            <p><strong>To:</strong> ${invoice.clients.name}</p>
-            <p><strong>Date:</strong> ${formatDate(invoice.invoice_date)}</p>
-            <p><strong>Due Date:</strong> ${formatDate(invoice.due_date)}</p>
-            <p><strong>Billing Period:</strong> ${formatDate(invoice.billing_period_start)} to ${formatDate(invoice.billing_period_end)}</p>
-          </div>
-          
-          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-            <thead>
-              <tr style="background-color: #f3f4f6;">
-                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Service Description</th>
-                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Quantity</th>
-                <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${lineItemsHtml}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="2" style="padding: 10px; text-align: right; font-weight: bold;">Total:</td>
-                <td style="padding: 10px; font-weight: bold;">${invoice.currency} ${invoice.total_amount.toFixed(2)}</td>
-              </tr>
-            </tfoot>
-          </table>
-          
-          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-            <p>Thank you for your business. Please make payment by the due date.</p>
-            <p>If you have any questions, please don't hesitate to contact us.</p>
-          </div>
-        </div>
-      `,
+    // Create a nicely formatted line items HTML
+    const lineItemsHtml = lineItems.map((item: any) => `
+      <tr>
+        <td>${item.service_description}</td>
+        <td>${item.quantity}</td>
+        <td>$${item.total_amount.toFixed(2)}</td>
+      </tr>
+    `).join('');
+
+    // Prepare email data
+    const emailData = {
+      service_id: Deno.env.get("EMAILJS_SERVICE_ID"),
+      template_id: Deno.env.get("EMAILJS_TEMPLATE_ID"),
+      user_id: Deno.env.get("EMAILJS_PUBLIC_KEY"),
+      accessToken: Deno.env.get("EMAILJS_PRIVATE_KEY"),
+      template_params: {
+        to_email: recipientEmail,
+        invoice_number: invoice.invoice_number,
+        client_name: invoice.clients.name,
+        invoice_date: formatDate(invoice.invoice_date),
+        due_date: formatDate(invoice.due_date),
+        billing_period_start: formatDate(invoice.billing_period_start),
+        billing_period_end: formatDate(invoice.billing_period_end),
+        line_items_html: lineItemsHtml,
+        currency: invoice.currency,
+        total_amount: invoice.total_amount.toFixed(2)
+      }
+    };
+
+    // Send email using EmailJS
+    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(emailData)
     });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("EmailJS error:", errorData);
+      throw new Error(`Failed to send email: ${errorData}`);
+    }
 
     // Only update invoice status if email was sent successfully
     const supabase = createClient(
@@ -97,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw updateError;
     }
 
-    console.log("Email sent successfully to test email:", testEmail);
+    console.log("Email sent successfully to:", recipientEmail);
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -115,3 +100,4 @@ const handler = async (req: Request): Promise<Response> => {
 };
 
 serve(handler);
+
