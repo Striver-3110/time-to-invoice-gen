@@ -1,9 +1,10 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Send } from "lucide-react";
-import { InvoiceStatus, type Invoice, type InvoiceLineItem } from "@/lib/types";
+import { ArrowLeft, Download } from "lucide-react";
+import { InvoiceStatus, type Invoice } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { generateInvoicePDF } from "@/utils/pdfGenerator";
 import { InvoiceDetailsCard } from "@/components/invoice/InvoiceDetailsCard";
@@ -126,7 +127,7 @@ const InvoiceView = () => {
     if (!invoice) return;
 
     try {
-      const { error } = await supabase.functions.invoke('send-invoice', {
+      const { error, data } = await supabase.functions.invoke('send-invoice', {
         body: {
           invoice: rawInvoiceData,
           lineItems: lineItemsRaw,
@@ -134,7 +135,15 @@ const InvoiceView = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Function error:", error);
+        throw error;
+      }
+
+      if (data && data.error) {
+        console.error("Data error:", data);
+        throw new Error(data.message || "Failed to send invoice");
+      }
 
       toast({
         title: "Success",
@@ -143,13 +152,14 @@ const InvoiceView = () => {
 
       await refetchInvoice();
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending invoice:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to send invoice",
+        description: error.message || "Failed to send invoice"
       });
+      throw error;
     }
   };
 

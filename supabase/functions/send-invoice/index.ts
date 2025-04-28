@@ -77,30 +77,45 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email sent successfully:", emailResponse);
-
-    // Update invoice status to SENT if the email was sent
-    if (!emailResponse.error) {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL') || '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-      );
-
-      const { error: updateError } = await supabase
-        .from('invoices')
-        .update({ status: 'SENT' })
-        .eq('invoice_id', invoice.invoice_id);
-
-      if (updateError) {
-        console.error("Error updating invoice status:", updateError);
-        throw updateError;
+    // Check for Resend testing mode limitations
+    if (emailResponse.error) {
+      // If this is the testing mode limitation error
+      if (emailResponse.error.statusCode === 403 && emailResponse.error.message.includes("testing emails")) {
+        const verifiedEmailMatch = emailResponse.error.message.match(/\(([^)]+)\)/);
+        const verifiedEmail = verifiedEmailMatch ? verifiedEmailMatch[1] : "your verified email";
+        
+        return new Response(
+          JSON.stringify({ 
+            error: "Email sending limitation", 
+            message: `Resend is in test mode. You can only send emails to ${verifiedEmail}. Please enter this email address or verify your domain at resend.com/domains.` 
+          }),
+          {
+            status: 422, // Unprocessable Entity - client error
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
       }
-    } else {
-      console.error("Error from Resend:", emailResponse.error);
+      
       throw new Error(emailResponse.error.message);
     }
 
-    return new Response(JSON.stringify(emailResponse), {
+    // Only update invoice status if email was sent successfully
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') || '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+    );
+
+    const { error: updateError } = await supabase
+      .from('invoices')
+      .update({ status: 'SENT' })
+      .eq('invoice_id', invoice.invoice_id);
+
+    if (updateError) {
+      console.error("Error updating invoice status:", updateError);
+      throw updateError;
+    }
+
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
