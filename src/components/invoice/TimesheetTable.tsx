@@ -1,18 +1,8 @@
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import type { ProjectTimesheet } from "@/types/invoice";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface ProjectTimesheet {
-  projectId: string;
-  projectName: string;
-  employees: {
-    designation: string;
-    days: number;
-    rate: number;
-    amount: number;
-  }[];
-}
 
 export const TimesheetTable = ({ projectTimesheets }: { projectTimesheets: ProjectTimesheet[] }) => {
   return (

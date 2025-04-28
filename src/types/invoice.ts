@@ -4,7 +4,7 @@ export interface ProjectTimesheet {
   projectName: string;
   employees: {
     designation: string;
-    hours: number;
+    days: number;
     rate: number;
     amount: number;
   }[];
@@ -12,7 +12,7 @@ export interface ProjectTimesheet {
 
 export interface DesignationTimesheet {
   designation: string;
-  hours: number;
+  days: number;
   rate: number;
   amount: number;
 }

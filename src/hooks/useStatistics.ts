@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,7 +17,7 @@ interface Statistics {
   };
   employeesByDesignation: { designation: string; count: number }[];
   projectStatusDistribution: { status: string; count: number }[];
-  timeEntriesByMonth: { month: string; total_hours: number }[];
+  timeEntriesByMonth: { month: string; total_days: number }[];
   clientContractStatus: { status: string; count: number }[];
 }
 
@@ -94,16 +95,33 @@ export const useStatistics = () => {
 
         supabase
           .from('time_entries')
-          .select('date, hours')
+          .select('date, days')
           .then(({ data }) => {
-            const monthlyHours = data?.reduce((acc, { date, hours }) => {
-              const month = new Date(date).toLocaleString('default', { month: 'long', year: 'numeric' });
-              acc[month] = (acc[month] || 0) + Number(hours);
+            if (!data) return [];
+            
+            const monthlyDays = data.reduce((acc, entry) => {
+              if (typeof entry !== 'object' || entry === null || !('date' in entry) || !('days' in entry)) {
+                return acc;
+              }
+              
+              const date = entry.date as string;
+              const days = Number(entry.days as number);
+              
+              if (isNaN(days)) return acc;
+              
+              try {
+                const month = new Date(date).toLocaleString('default', { month: 'long', year: 'numeric' });
+                acc[month] = (acc[month] || 0) + days;
+              } catch (e) {
+                console.error("Error processing date", e);
+              }
+              
               return acc;
             }, {} as Record<string, number>);
-            return Object.entries(monthlyHours || {}).map(([month, total_hours]) => ({
+            
+            return Object.entries(monthlyDays).map(([month, total_days]) => ({
               month,
-              total_hours
+              total_days
             }));
           }),
 

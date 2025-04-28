@@ -68,7 +68,7 @@ export const useTimesheetGeneration = (
             employee_id, 
             project_id, 
             date, 
-            hours,
+            days,
             employees(id, designation)
           `)
           .eq('project_id', project.id)
@@ -93,28 +93,28 @@ export const useTimesheetGeneration = (
         }
         
         const designationMap = new Map<string, {
-          hours: number;
+          days: number;
           rate: number;
           amount: number;
         }>();
         
         timeEntries.forEach((entry: any) => {
           const designation = entry.employees.designation;
-          const hours = entry.hours;
+          const days = entry.days;
           
           // Get hourly rate from assignments, fallback to 75 if not found
-          const hourlyRate = ratesByProjectAndDesignation[project.id]?.[designation] || 75;
+          const dailyRate = ratesByProjectAndDesignation[project.id]?.[designation] || 600; // 75*8=600
           
           if (!designationMap.has(designation)) {
             designationMap.set(designation, {
-              hours,
-              rate: hourlyRate,
-              amount: hours * hourlyRate
+              days,
+              rate: dailyRate,
+              amount: days * dailyRate
             });
           } else {
             const existing = designationMap.get(designation)!;
-            existing.hours += hours;
-            existing.amount = existing.hours * existing.rate;
+            existing.days += days;
+            existing.amount = existing.days * existing.rate;
             designationMap.set(designation, existing);
           }
         });
@@ -124,7 +124,7 @@ export const useTimesheetGeneration = (
           projectName: project.project_name,
           employees: Array.from(designationMap.entries()).map(([designation, data]) => ({
             designation,
-            hours: data.hours,
+            days: data.days,
             rate: data.rate,
             amount: data.amount
           }))
