@@ -31,12 +31,12 @@ const handler = async (req: Request): Promise<Response> => {
       </tr>
     `).join('');
 
-    // Prepare email data
+    // Prepare email data with your EmailJS credentials
     const emailData = {
-      service_id: Deno.env.get("EMAILJS_SERVICE_ID"),
-      template_id: Deno.env.get("EMAILJS_TEMPLATE_ID"),
-      user_id: Deno.env.get("EMAILJS_PUBLIC_KEY"),
-      accessToken: Deno.env.get("EMAILJS_PRIVATE_KEY"),
+      service_id: "service_2ty5cia",
+      template_id: "template_5dp51gk",
+      user_id: "XZjPDxTgi90v1yY24",
+      accessToken: "JU0CCwxaSJeClHNB9fReu",
       template_params: {
         to_email: recipientEmail,
         invoice_number: invoice.invoice_number,
@@ -66,6 +66,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Failed to send email: ${errorData}`);
     }
 
+    console.log("Email sent successfully to:", recipientEmail);
+
     // Only update invoice status if email was sent successfully
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') || '',
@@ -82,7 +84,6 @@ const handler = async (req: Request): Promise<Response> => {
       throw updateError;
     }
 
-    console.log("Email sent successfully to:", recipientEmail);
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -100,4 +101,3 @@ const handler = async (req: Request): Promise<Response> => {
 };
 
 serve(handler);
-
