@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
@@ -31,7 +30,7 @@ interface FormData {
   employeeId: string;
   startDate: Date;
   endDate: Date;
-  hourlyRate: number;
+  dailyRate: number;
 }
 
 interface AssignmentFormFieldsProps {
@@ -159,17 +158,17 @@ export function AssignmentFormFields({ form }: AssignmentFormFieldsProps) {
 
       <FormField
         control={form.control}
-        name="hourlyRate"
+        name="dailyRate"
         rules={{ 
-          required: "Hourly rate is required",
+          required: "Daily rate is required",
           min: {
             value: 1,
-            message: "Hourly rate must be greater than 0"
+            message: "Daily rate must be greater than 0"
           }
         }}
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-indigo-700 font-medium">Hourly Rate ($)</FormLabel>
+            <FormLabel className="text-indigo-700 font-medium">Daily Rate ($)</FormLabel>
             <FormControl>
               <Input 
                 type="number"

@@ -25,7 +25,7 @@ interface FormData {
   employeeId: string;
   startDate: Date;
   endDate: Date;
-  hourlyRate: number;
+  dailyRate: number;
 }
 
 export function AssignEmployeeSheet({ isOpen, onClose, projectId, onSuccess }: AssignEmployeeFormProps) {
@@ -37,7 +37,7 @@ export function AssignEmployeeSheet({ isOpen, onClose, projectId, onSuccess }: A
       employeeId: "",
       startDate: new Date(),
       endDate: new Date(),
-      hourlyRate: 75,
+      dailyRate: 600, // Default daily rate
     },
   });
 
@@ -49,7 +49,7 @@ export function AssignEmployeeSheet({ isOpen, onClose, projectId, onSuccess }: A
         project_id: projectId,
         start_date: data.startDate.toISOString(),
         end_date: data.endDate.toISOString(),
-        hourly_rate: data.hourlyRate,
+        hourly_rate: data.dailyRate / 8, // Convert daily rate to hourly rate for database storage
         status: "ACTIVE",
       });
 
