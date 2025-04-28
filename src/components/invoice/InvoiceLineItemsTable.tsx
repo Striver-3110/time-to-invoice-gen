@@ -44,14 +44,14 @@ export const InvoiceLineItemsTable = ({ lineItems, currency, totalAmount }: Invo
           </TableHeader>
           <TableBody>
             {lineItems.map((item) => {
-              const rate = item.total_amount / item.quantity;
+              const dailyRate = item.total_amount / item.quantity;
               return (
                 <TableRow key={item.line_item_id}>
                   <TableCell>{item.service_description}</TableCell>
                   <TableCell>{item.projects?.project_name || '-'}</TableCell>
                   <TableCell>{item.employees?.designation || '-'}</TableCell>
                   <TableCell>{item.quantity} days</TableCell>
-                  <TableCell>{currency} {rate.toFixed(2)}</TableCell>
+                  <TableCell>{currency} {dailyRate.toFixed(2)}</TableCell>
                   <TableCell className="text-right font-medium">
                     {currency} {item.total_amount.toFixed(2)}
                   </TableCell>

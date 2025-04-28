@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -44,7 +43,7 @@ export const useTimesheetGeneration = (
         throw assignmentsError;
       }
       
-      // Create a map of employee designations and hourly rates per project
+      // Create a map of employee designations and daily rates per project (converting from hourly)
       const ratesByProjectAndDesignation: Record<string, Record<string, number>> = {};
       
       assignments.forEach((assignment: any) => {
@@ -57,7 +56,8 @@ export const useTimesheetGeneration = (
           ratesByProjectAndDesignation[projectId] = {};
         }
         
-        ratesByProjectAndDesignation[projectId][designation] = assignment.hourly_rate;
+        // Convert hourly rate to daily rate (8 hours per day)
+        ratesByProjectAndDesignation[projectId][designation] = assignment.hourly_rate * 8;
       });
       
       const timesheetsPromises = projects.map(async (project) => {
@@ -102,8 +102,8 @@ export const useTimesheetGeneration = (
           const designation = entry.employees.designation;
           const days = entry.days;
           
-          // Get hourly rate from assignments, fallback to 75 if not found
-          const dailyRate = ratesByProjectAndDesignation[project.id]?.[designation] || 600; // 75*8=600
+          // Get daily rate from assignments, fallback to 600 if not found
+          const dailyRate = ratesByProjectAndDesignation[project.id]?.[designation] || 600; // 8*75=600
           
           if (!designationMap.has(designation)) {
             designationMap.set(designation, {
