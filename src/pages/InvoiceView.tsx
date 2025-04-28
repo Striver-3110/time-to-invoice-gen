@@ -16,6 +16,18 @@ import { PaymentDialog } from "@/components/invoice/PaymentDialog";
 import { SendInvoiceDialog } from "@/components/invoice/SendInvoiceDialog";
 import { useState } from "react";
 
+// Define the missing InvoiceLineItem interface
+interface InvoiceLineItem {
+  id: string;
+  invoiceId: string;
+  assignmentId: string;
+  employeeId: string;
+  projectId: string;
+  serviceDescription: string;
+  quantity: number;
+  totalAmount: number;
+}
+
 const transformInvoiceData = (data: any): Invoice => {
   return {
     id: data.invoice_id,
