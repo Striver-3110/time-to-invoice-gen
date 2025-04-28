@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -254,6 +255,9 @@ const InvoiceView = () => {
     );
   }
 
+  // Determine if we should show the send button based on status
+  const showSendButton = invoice.status !== InvoiceStatus.PAID;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -281,7 +285,7 @@ const InvoiceView = () => {
               </>
             )}
           </Button>
-          {invoice.status === InvoiceStatus.DRAFT && (
+          {showSendButton && (
             <SendInvoiceDialog 
               defaultEmail={rawInvoiceData?.clients?.contact_email || ''}
               onSendEmail={sendInvoice}
