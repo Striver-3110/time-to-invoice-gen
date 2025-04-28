@@ -5,7 +5,6 @@
 - [How AI Was Used](#how-ai-was-used)
 - [App Flow](#app-flow)
 - [Demo Summary](#demo-summary)
-- [Innovation](#innovation)
 - [Technology Stack](#technology-stack)
 - [What's Next](#whats-next)
  
@@ -13,7 +12,7 @@
  
 ## Overview
 **Invoice Genius** helps service businesses manage their operations efficiently — adding clients, assigning projects, managing teams, and generating invoices — all through a fast and polished interface.  
-Built quickly without compromising on quality by integrating AI across the entire Software Development Lifecycle (SDLC).
+Built quickly integrating AI across the entire Software Development Lifecycle (SDLC).
  
 ---
  
