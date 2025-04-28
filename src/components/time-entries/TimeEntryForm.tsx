@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,13 +13,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import { useTimeEntryData } from "@/hooks/useTimeEntryData";
 import { EmployeeSelect } from "./EmployeeSelect";
 import { ProjectSelect } from "./ProjectSelect";
@@ -31,7 +30,7 @@ interface TimeEntryFormProps {
     employee_id: string;
     project_id: string;
     date: string;
-    hours: number;
+    days: number;
   };
   onSuccess: () => void;
   onCancel: () => void;
@@ -46,7 +45,7 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
       employee_id: timeEntry?.employee_id || "",
       project_id: timeEntry?.project_id || "",
       date: timeEntry?.date ? new Date(timeEntry.date) : new Date(),
-      hours: timeEntry?.hours || "",
+      days: timeEntry?.days || "",
     },
   });
 
@@ -62,7 +61,7 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
               employee_id: data.employee_id,
               project_id: data.project_id,
               date: data.date,
-              hours: data.hours,
+              days: data.days,
             })
             .eq('id', timeEntry.id)
         : await supabase
@@ -71,7 +70,7 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
               employee_id: data.employee_id,
               project_id: data.project_id,
               date: data.date,
-              hours: data.hours,
+              days: data.days,
             });
 
       if (error) throw error;
@@ -141,16 +140,16 @@ export function TimeEntryForm({ timeEntry, onSuccess, onCancel }: TimeEntryFormP
 
         <FormField
           control={form.control}
-          name="hours"
+          name="days"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-green-500">Hours</FormLabel>
+              <FormLabel className="text-green-500">Days</FormLabel>
               <FormControl>
                 <Input 
                   type="number" 
                   step="0.5" 
                   min="0.5" 
-                  max="24" 
+                  max="30" 
                   {...field} 
                   className="bg-green-50 border-green-200"
                 />

@@ -1,4 +1,3 @@
-
 import {
   Table,
   TableBody,
@@ -24,11 +23,7 @@ interface InvoiceLineItemsTableProps {
   totalAmount: number;
 }
 
-export const InvoiceLineItemsTable = ({ 
-  lineItems, 
-  currency, 
-  totalAmount 
-}: InvoiceLineItemsTableProps) => {
+export const InvoiceLineItemsTable = ({ lineItems, currency, totalAmount }: InvoiceLineItemsTableProps) => {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="bg-muted/30">
@@ -41,8 +36,8 @@ export const InvoiceLineItemsTable = ({
               <TableHead>Description</TableHead>
               <TableHead>Project</TableHead>
               <TableHead>Employee</TableHead>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Rate</TableHead>
+              <TableHead>Days</TableHead>
+              <TableHead>Daily Rate</TableHead>
               <TableHead className="text-right">Amount</TableHead>
             </TableRow>
           </TableHeader>
@@ -54,7 +49,7 @@ export const InvoiceLineItemsTable = ({
                   <TableCell>{item.service_description}</TableCell>
                   <TableCell>{item.projects?.project_name || '-'}</TableCell>
                   <TableCell>{item.employees?.designation || '-'}</TableCell>
-                  <TableCell>{item.quantity} hours</TableCell>
+                  <TableCell>{item.quantity} days</TableCell>
                   <TableCell>{currency} {rate.toFixed(2)}</TableCell>
                   <TableCell className="text-right font-medium">
                     {currency} {item.total_amount.toFixed(2)}

@@ -7,12 +7,13 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 interface TimeEntry {
   id: string;
   employee_id: string;
   project_id: string;
   date: string;
-  hours: number;
+  days: number;
   employee?: {
     first_name: string;
     last_name: string;
@@ -21,6 +22,7 @@ interface TimeEntry {
     project_name: string;
   };
 }
+
 export function TimeEntryList({
   onEdit
 }: {
@@ -30,6 +32,7 @@ export function TimeEntryList({
     toast
   } = useToast();
   const [timeEntryToDelete, setTimeEntryToDelete] = useState<string | null>(null);
+
   const {
     data: timeEntries,
     isLoading,
@@ -59,6 +62,7 @@ export function TimeEntryList({
       return data as TimeEntry[];
     }
   });
+
   const handleDelete = async (id: string) => {
     const {
       error
@@ -78,9 +82,11 @@ export function TimeEntryList({
     }
     setTimeEntryToDelete(null);
   };
+
   if (isLoading) return <div className="flex items-center justify-center h-64">
     <div className="animate-pulse text-muted-foreground">Loading...</div>
   </div>;
+
   return <>
       <div className="rounded-lg border bg-card">
         <Table>
@@ -89,7 +95,7 @@ export function TimeEntryList({
               <TableHead className="font-semibold text-purple-600">Employee</TableHead>
               <TableHead className="font-semibold text-blue-500">Project</TableHead>
               <TableHead className="font-semibold text-purple-600">Date</TableHead>
-              <TableHead className="font-semibold text-purple-600">Hours</TableHead>
+              <TableHead className="font-semibold text-purple-600">Days</TableHead>
               <TableHead className="font-semibold text-right text-purple-600">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -105,7 +111,7 @@ export function TimeEntryList({
                   {entry.date ? format(new Date(entry.date), 'PPP') : 'N/A'}
                 </TableCell>
                 <TableCell className="text-black-500">
-                  {entry.hours}
+                  {entry.days}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
