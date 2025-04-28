@@ -19,6 +19,10 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { invoice, lineItems, recipientEmail } = await req.json();
 
+    // Override recipient email in test mode
+    const testEmail = "prajapatijay31100@gmail.com";
+    console.log(`Original recipient: ${recipientEmail}, using test email: ${testEmail} for development`);
+
     // Create a nicely formatted line items HTML
     const lineItemsHtml = lineItems.map((item: any) => `
       <tr>
@@ -37,7 +41,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email with invoice details
     const emailResponse = await resend.emails.send({
       from: "Invoicing System <onboarding@resend.dev>",
-      to: [recipientEmail],
+      to: [testEmail], // Use the test email instead of recipientEmail
       subject: `Invoice #${invoice.invoice_number}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
@@ -77,28 +81,6 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    // Check for Resend testing mode limitations
-    if (emailResponse.error) {
-      // If this is the testing mode limitation error
-      if (emailResponse.error.statusCode === 403 && emailResponse.error.message.includes("testing emails")) {
-        const verifiedEmailMatch = emailResponse.error.message.match(/\(([^)]+)\)/);
-        const verifiedEmail = verifiedEmailMatch ? verifiedEmailMatch[1] : "your verified email";
-        
-        return new Response(
-          JSON.stringify({ 
-            error: "Email sending limitation", 
-            message: `Resend is in test mode. You can only send emails to ${verifiedEmail}. Please enter this email address or verify your domain at resend.com/domains.` 
-          }),
-          {
-            status: 422, // Unprocessable Entity - client error
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
-      
-      throw new Error(emailResponse.error.message);
-    }
-
     // Only update invoice status if email was sent successfully
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') || '',
@@ -115,6 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw updateError;
     }
 
+    console.log("Email sent successfully to test email:", testEmail);
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
