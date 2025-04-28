@@ -33,23 +33,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Prepare email data with your EmailJS credentials
     const emailData = {
-      service_id: "service_2ty5cia",
-      template_id: "template_5dp51gk",
-      user_id: "XZjPDxTgi90v1yY24",
-      accessToken: "JU0CCwxaSJeClHNB9fReu",
+      service_id: Deno.env.get("EMAILJS_SERVICE_ID") || "service_2ty5cia",
+      template_id: Deno.env.get("EMAILJS_TEMPLATE_ID") || "template_5dp51gk",
+      user_id: Deno.env.get("EMAILJS_PUBLIC_KEY") || "XZjPDxTgi90v1yY24",
+      accessToken: Deno.env.get("EMAILJS_PRIVATE_KEY") || "JU0CCwxaSJeClHNB9fReu",
       template_params: {
         to_email: recipientEmail,
-        invoice_number: invoice.invoice_number,
-        client_name: invoice.clients.name,
-        invoice_date: formatDate(invoice.invoice_date),
-        due_date: formatDate(invoice.due_date),
-        billing_period_start: formatDate(invoice.billing_period_start),
-        billing_period_end: formatDate(invoice.billing_period_end),
+        invoice_number: invoice.invoiceNumber,
+        client_name: invoice.clients?.name || "Client",
+        invoice_date: formatDate(invoice.invoiceDate),
+        due_date: formatDate(invoice.dueDate),
+        billing_period_start: formatDate(invoice.billingPeriodStart),
+        billing_period_end: formatDate(invoice.billingPeriodEnd),
         line_items_html: lineItemsHtml,
         currency: invoice.currency,
-        total_amount: invoice.total_amount.toFixed(2)
+        total_amount: invoice.totalAmount.toFixed(2)
       }
     };
+
+    console.log("Sending email with data:", JSON.stringify(emailData, null, 2));
 
     // Send email using EmailJS
     const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
@@ -77,7 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: updateError } = await supabase
       .from('invoices')
       .update({ status: 'SENT' })
-      .eq('invoice_id', invoice.invoice_id);
+      .eq('invoice_id', invoice.id);
 
     if (updateError) {
       console.error("Error updating invoice status:", updateError);

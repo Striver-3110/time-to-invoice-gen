@@ -146,12 +146,12 @@ const InvoiceView = () => {
       };
       
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-invoice`,
+        `${import.meta.env.VITE_SUPABASE_URL || "https://oxoiambekglszdukupem.supabase.co"}/functions/v1/send-invoice`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94b2lhbWJla2dsc3pkdWt1cGVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwNDIzNDYsImV4cCI6MjA2MDYxODM0Nn0.pmQFGkY3ikWz_xI6rxZadLPWKO7cP4-aTkehoFGGtD0"}`
           },
           body: JSON.stringify(dataToSend)
         }
