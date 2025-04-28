@@ -38,6 +38,7 @@ export const SendInvoiceDialog = ({
     try {
       await onSendEmail(email);
       setIsOpen(false);
+      // We don't modify any state that would disable the "Send to Client" button
     } catch (error: any) {
       console.error("Send invoice error:", error);
       setErrorMessage(error.message || "Failed to send the invoice. Please try again.");

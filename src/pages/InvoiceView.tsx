@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +15,6 @@ import { PaymentDialog } from "@/components/invoice/PaymentDialog";
 import { SendInvoiceDialog } from "@/components/invoice/SendInvoiceDialog";
 import { useState } from "react";
 
-// Define the missing InvoiceLineItem interface
 interface InvoiceLineItem {
   id: string;
   invoiceId: string;
@@ -63,6 +61,7 @@ const InvoiceView = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const { 
     data: rawInvoiceData, 
@@ -135,43 +134,50 @@ const InvoiceView = () => {
     }
   };
 
-  const sendInvoiceToClient = async (email: string) => {
-    if (!invoice) return;
-
+  const sendInvoice = async (email: string) => {
+    setIsSending(true);
+    
     try {
-      const { error, data } = await supabase.functions.invoke('send-invoice', {
-        body: {
-          invoice: rawInvoiceData,
-          lineItems: lineItemsRaw,
-          recipientEmail: email
+      const dataToSend = {
+        invoice: invoice,
+        lineItems: lineItems,
+        recipientEmail: email
+      };
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-invoice`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify(dataToSend)
         }
-      });
-
-      if (error) {
-        console.error("Function error:", error);
-        throw error;
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`Failed to send invoice: ${errorData}`);
       }
-
-      if (data && data.error) {
-        console.error("Data error:", data);
-        throw new Error(data.message || "Failed to send invoice");
-      }
-
+      
       toast({
-        title: "Success",
-        description: "Invoice has been sent successfully",
+        title: "Invoice Sent",
+        description: `Invoice successfully sent to ${email}`,
       });
-
-      await refetchInvoice();
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      
+      await queryClient.invalidateQueries({ queryKey: ['invoice', id] });
+      
     } catch (error: any) {
       console.error("Error sending invoice:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to send invoice"
+        title: "Failed to send invoice",
+        description: error.message || "An unexpected error occurred",
       });
       throw error;
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -278,7 +284,7 @@ const InvoiceView = () => {
           {invoice.status === InvoiceStatus.DRAFT && (
             <SendInvoiceDialog 
               defaultEmail={rawInvoiceData?.clients?.contact_email || ''}
-              onSendEmail={sendInvoiceToClient}
+              onSendEmail={sendInvoice}
             />
           )}
         </div>
