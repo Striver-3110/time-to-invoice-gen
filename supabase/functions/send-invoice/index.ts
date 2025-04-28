@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@1.0.0";
@@ -97,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending email to:", recipientEmail);
 
-    // Send email using Resend
+    // Send email using Resend with the test domain
     const data = await resend.emails.send({
       from: 'Invoicing <onboarding@resend.dev>',
       to: [recipientEmail],
