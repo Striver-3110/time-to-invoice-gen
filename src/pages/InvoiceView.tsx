@@ -12,6 +12,7 @@ import { BillingPeriodCard } from "@/components/invoice/BillingPeriodCard";
 import { InvoiceLineItemsTable } from "@/components/invoice/InvoiceLineItemsTable";
 import { isPast } from "date-fns";
 import { PaymentDialog } from "@/components/invoice/PaymentDialog";
+import { SendInvoiceDialog } from "@/components/invoice/SendInvoiceDialog";
 import { useState } from "react";
 
 const transformInvoiceData = (data: any): Invoice => {
@@ -121,26 +122,29 @@ const InvoiceView = () => {
     }
   };
 
-  const sendInvoiceToClient = async () => {
+  const sendInvoiceToClient = async (email: string) => {
     if (!invoice) return;
 
     try {
-      const { error } = await supabase
-        .from('invoices')
-        .update({ status: InvoiceStatus.SENT })
-        .eq('invoice_id', invoice.id);
+      const { error } = await supabase.functions.invoke('send-invoice', {
+        body: {
+          invoice: rawInvoiceData,
+          lineItems: lineItemsRaw,
+          recipientEmail: email
+        }
+      });
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Invoice has been sent to client",
+        description: "Invoice has been sent successfully",
       });
 
       await refetchInvoice();
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
     } catch (error) {
-      console.error("Error updating invoice status:", error);
+      console.error("Error sending invoice:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -250,10 +254,10 @@ const InvoiceView = () => {
             )}
           </Button>
           {invoice.status === InvoiceStatus.DRAFT && (
-            <Button onClick={sendInvoiceToClient}>
-              <Send className="h-4 w-4 mr-2" />
-              Send to Client
-            </Button>
+            <SendInvoiceDialog 
+              defaultEmail={rawInvoiceData?.clients?.contact_email || ''}
+              onSendEmail={sendInvoiceToClient}
+            />
           )}
         </div>
       </div>
