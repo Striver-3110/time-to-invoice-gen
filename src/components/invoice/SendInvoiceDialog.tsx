@@ -33,12 +33,16 @@ export const SendInvoiceDialog = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSend = async () => {
+    if (!email || !email.includes('@')) {
+      setErrorMessage("Please enter a valid email address");
+      return;
+    }
+    
     setIsSending(true);
     setErrorMessage(null);
     try {
       await onSendEmail(email);
       setIsOpen(false);
-      // We don't modify any state that would disable the "Send to Client" button
     } catch (error: any) {
       console.error("Send invoice error:", error);
       setErrorMessage(error.message || "Failed to send the invoice. Please try again.");
