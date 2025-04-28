@@ -1,3 +1,4 @@
+# Invoice Genius 
 ---
  
 ## Table of Contents
