@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { addDays } from "date-fns";
@@ -105,7 +106,7 @@ const ClientInvoiceGenerate = () => {
             assignment_id: assignmentMap[project.projectId]?.[employee.designation],
             employee_id: employeeId,
             service_description: `${employee.designation} services - ${project.projectName}`,
-            quantity: employee.hours,
+            quantity: employee.days,
             total_amount: employee.amount
           };
         })
